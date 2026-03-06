@@ -22,6 +22,12 @@
                        class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Publication Year</label>
+                <input type="number" name="publication_year" value="{{ old('publication_year', $book->publication_year) }}"
+                       min="1000" max="{{ date('Y') + 1 }}" placeholder="e.g., {{ date('Y') }}"
+                       class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Category *</label>
                 <select name="category_id" required
                         class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
@@ -34,12 +40,13 @@
             </div>
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">ISBN *</label>
-                    <input type="text" name="isbn" value="{{ old('isbn', $book->isbn) }}" required
-                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="block text-gray-700 font-medium mb-2">ISBN (Auto-generated)</label>
+                    <input type="text" name="isbn" value="{{ old('isbn', $book->isbn) }}" readonly
+                           class="w-full border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed">
+                    <p class="text-gray-500 text-xs mt-1">ISBN cannot be changed</p>
                 </div>
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Price ($) *</label>
+                    <label class="block text-gray-700 font-medium mb-2">Price (₱) *</label>
                     <input type="number" step="0.01" name="price" value="{{ old('price', $book->price) }}" required
                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>

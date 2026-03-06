@@ -45,6 +45,23 @@
                 @enderror
             </div>
 
+            <!-- Publication Year -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Publication Year</label>
+
+                <input type="number"
+                       name="publication_year"
+                       value="{{ old('publication_year') }}"
+                       min="1000"
+                       max="{{ date('Y') + 1 }}"
+                       placeholder="e.g., {{ date('Y') }}"
+                       class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">
+
+                @error('publication_year')
+                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Category -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-medium mb-2">Category *</label>
@@ -69,25 +86,18 @@
                 @enderror
             </div>
 
-            <!-- ISBN + Price -->
+            <!-- ISBN Info -->
+            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p class="text-sm text-blue-800">
+                    <strong>📚 Note:</strong> ISBN will be automatically generated when you create the book.
+                </p>
+            </div>
+
+            <!-- Price + Stock -->
             <div class="grid grid-cols-2 gap-4 mb-4">
 
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">ISBN *</label>
-
-                    <input type="text"
-                           name="isbn"
-                           value="{{ old('isbn') }}"
-                           required
-                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">
-
-                    @error('isbn')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">Price ($) *</label>
+                    <label class="block text-gray-700 font-medium mb-2">Price (₱) *</label>
 
                     <input type="number"
                            step="0.01"
@@ -100,21 +110,20 @@
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-            </div>
 
-            <!-- Stock -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-medium mb-2">Stock Quantity *</label>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Stock Quantity *</label>
 
-                <input type="number"
-                       name="stock_quantity"
-                       value="{{ old('stock_quantity', 0) }}"
-                       required
-                       class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">
+                    <input type="number"
+                           name="stock_quantity"
+                           value="{{ old('stock_quantity', 0) }}"
+                           required
+                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">
 
-                @error('stock_quantity')
-                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                    @error('stock_quantity')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- Description -->

@@ -21,6 +21,18 @@
                     <a href="{{ route('register') }}" class="bg-white text-indigo-600 px-4 py-2 rounded-md font-medium">Register</a>
                 @endguest
                 @auth
+                    <a href="{{ route('cart.index') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md relative">
+                        🛒 Cart
+                        @php
+                            $cart = session()->get('cart', []);
+                            $cartCount = array_sum($cart);
+                        @endphp
+                        @if($cartCount > 0)
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ $cartCount }}
+                            </span>
+                        @endif
+                    </a>
                     <a href="{{ route('orders.index') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">My Orders</a>
                      <a href="{{ route('profile.edit') }}" class="text-indigo-200 hover:text-white hover:bg-indigo-700 px-3 py-2 rounded-md">
                             {{ auth()->user()->name }}

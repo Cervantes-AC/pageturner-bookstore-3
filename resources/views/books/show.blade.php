@@ -19,6 +19,9 @@
             <span class="text-indigo-600 text-sm font-medium">{{ $book->category->name }}</span>
             <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ $book->title }}</h1>
             <p class="text-xl text-gray-600 mt-1">by {{ $book->author }}</p>
+            @if($book->publication_year)
+                <p class="text-gray-500 text-sm mt-1">Published: {{ $book->publication_year }}</p>
+            @endif
 
             <div class="flex items-center mt-4">
                 @for($i = 1; $i <= 5; $i++)
@@ -27,7 +30,7 @@
                 <span class="ml-2 text-gray-600">{{ number_format($book->average_rating, 1) }} ({{ $book->reviews->count() }} reviews)</span>
             </div>
 
-            <p class="text-3xl font-bold text-indigo-600 mt-4">${{ number_format($book->price, 2) }}</p>
+            <p class="text-3xl font-bold text-indigo-600 mt-4">₱{{ number_format($book->price, 2) }}</p>
 
             <div class="mt-4">
                 @if($book->stock_quantity > 0)
@@ -44,19 +47,18 @@
                 <p class="text-gray-600 mt-2">{{ $book->description }}</p>
             </div>
 
-            {{-- Order Button --}}
+            {{-- Add to Cart Button --}}
             @auth
                 @if($book->stock_quantity > 0)
-                    <form action="{{ route('orders.store') }}" method="POST" class="mt-6">
+                    <form action="{{ route('cart.add', $book) }}" method="POST" class="mt-6">
                         @csrf
-                        <input type="hidden" name="items[0][book_id]" value="{{ $book->id }}">
                         <div class="flex items-center gap-4">
-                            <input type="number" name="items[0][quantity]" value="1" min="1"
+                            <input type="number" name="quantity" value="1" min="1"
                                    max="{{ $book->stock_quantity }}"
                                    class="w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                             <button type="submit"
                                     class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                                🛒 Place Order
+                                🛒 Add to Cart
                             </button>
                         </div>
                     </form>
@@ -98,32 +100,38 @@
     <h2 class="text-2xl font-bold mb-6">Customer Reviews</h2>
 
     @auth
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 class="font-semibold text-lg mb-4">Write a Review</h3>
-            <form action="{{ route('reviews.store', $book) }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">Rating</label>
-                    <select name="rating" required
-                            class="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">Select rating</option>
-                        @for($i = 5; $i >= 1; $i--)
-                            <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">Comment</label>
-                    <textarea name="comment" rows="4"
-                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder="Share your thoughts..."></textarea>
-                </div>
-                <button type="submit"
-                        class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                    Submit Review
-                </button>
-            </form>
-        </div>
+        @if(auth()->user()->hasPurchased($book->id))
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="font-semibold text-lg mb-4">Write a Review</h3>
+                <form action="{{ route('reviews.store', $book) }}" method="POST">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Rating</label>
+                        <select name="rating" required
+                                class="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Select rating</option>
+                            @for($i = 5; $i >= 1; $i--)
+                                <option value="{{ $i }}">{{ $i }} Star{{ $i > 1 ? 's' : '' }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Comment</label>
+                        <textarea name="comment" rows="4"
+                                  class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                  placeholder="Share your thoughts..."></textarea>
+                    </div>
+                    <button type="submit"
+                            class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                        Submit Review
+                    </button>
+                </form>
+            </div>
+        @else
+            <x-alert type="info" class="mb-6">
+                You must purchase this book before you can write a review.
+            </x-alert>
+        @endif
     @else
         <x-alert type="info" class="mb-6">
             <a href="{{ route('login') }}" class="text-indigo-600 hover:underline">Login</a> to write a review.

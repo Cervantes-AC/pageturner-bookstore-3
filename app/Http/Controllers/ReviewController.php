@@ -10,6 +10,11 @@ class ReviewController extends Controller
 {
     public function store(Request $request, Book $book)
     {
+        // Check if user has purchased the book
+        if (!auth()->user()->hasPurchased($book->id)) {
+            return back()->with('error', 'You can only review books you have purchased.');
+        }
+
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',

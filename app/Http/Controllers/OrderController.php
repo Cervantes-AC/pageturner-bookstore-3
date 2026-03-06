@@ -26,6 +26,9 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.book_id' => 'required|exists:books,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'shipping_name' => 'required|string|max:255',
+            'shipping_phone' => 'required|string|max:20',
+            'shipping_address' => 'required|string|max:1000',
         ]);
 
         $total = 0;
@@ -52,6 +55,9 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
             'total_amount' => $total,
             'status' => 'pending',
+            'shipping_name' => $request->shipping_name,
+            'shipping_phone' => $request->shipping_phone,
+            'shipping_address' => $request->shipping_address,
         ]);
 
         foreach ($orderItems as $item) {
@@ -59,6 +65,9 @@ class OrderController extends Controller
             // Reduce stock
             Book::find($item['book_id'])->decrement('stock_quantity', $item['quantity']);
         }
+
+        // Clear cart after successful order
+        session()->forget('cart');
 
         return redirect()->route('orders.show', $order)
             ->with('success', 'Order placed successfully!');

@@ -44,4 +44,14 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    public function hasPurchased($bookId)
+    {
+        return $this->orders()
+            ->whereHas('orderItems', function ($query) use ($bookId) {
+                $query->where('book_id', $bookId);
+            })
+            ->exists();
+    }
+
 }

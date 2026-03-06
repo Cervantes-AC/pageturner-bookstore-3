@@ -13,6 +13,7 @@ class Book extends Model
         'category_id',
         'title',
         'author',
+        'publication_year',
         'isbn',
         'price',
         'stock_quantity',

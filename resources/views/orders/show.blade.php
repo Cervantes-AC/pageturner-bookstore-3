@@ -23,7 +23,7 @@
         </div>
         <div>
             <p class="text-gray-500 text-sm">Total</p>
-            <p class="font-bold text-indigo-600">${{ number_format($order->total_amount, 2) }}</p>
+            <p class="font-bold text-indigo-600">₱{{ number_format($order->total_amount, 2) }}</p>
         </div>
         <div>
             <p class="text-gray-500 text-sm">Items</p>
@@ -49,6 +49,24 @@
         </form>
     @endif
 
+    {{-- Shipping Information --}}
+    @if($order->shipping_name || $order->shipping_phone || $order->shipping_address)
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-semibold text-lg mb-3">Shipping Information</h3>
+            <div class="space-y-2">
+                @if($order->shipping_name)
+                    <p><span class="text-gray-600">Name:</span> <span class="font-medium">{{ $order->shipping_name }}</span></p>
+                @endif
+                @if($order->shipping_phone)
+                    <p><span class="text-gray-600">Phone:</span> <span class="font-medium">{{ $order->shipping_phone }}</span></p>
+                @endif
+                @if($order->shipping_address)
+                    <p><span class="text-gray-600">Address:</span> <span class="font-medium">{{ $order->shipping_address }}</span></p>
+                @endif
+            </div>
+        </div>
+    @endif
+
     {{-- Order Items --}}
     <h3 class="font-semibold text-lg mb-4">Items Ordered</h3>
     <div class="border rounded-lg overflow-hidden">
@@ -72,8 +90,8 @@
                             <p class="text-gray-500 text-sm">by {{ $item->book->author }}</p>
                         </td>
                         <td class="px-4 py-3 text-center">{{ $item->quantity }}</td>
-                        <td class="px-4 py-3 text-right">${{ number_format($item->unit_price, 2) }}</td>
-                        <td class="px-4 py-3 text-right font-semibold">${{ number_format($item->subtotal, 2) }}</td>
+                        <td class="px-4 py-3 text-right">₱{{ number_format($item->unit_price, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-semibold">₱{{ number_format($item->subtotal, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -81,7 +99,7 @@
                 <tr>
                     <td colspan="3" class="px-4 py-3 text-right font-bold">Total:</td>
                     <td class="px-4 py-3 text-right font-bold text-indigo-600">
-                        ${{ number_format($order->total_amount, 2) }}
+                        ₱{{ number_format($order->total_amount, 2) }}
                     </td>
                 </tr>
             </tfoot>

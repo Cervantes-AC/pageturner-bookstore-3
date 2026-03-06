@@ -18,7 +18,7 @@
                     <p class="text-gray-500 text-sm">{{ $order->created_at->format('M d, Y') }}</p>
                 </div>
                 <div class="text-right">
-                    <p class="font-bold text-indigo-600 text-lg">${{ number_format($order->total_amount, 2) }}</p>
+                    <p class="font-bold text-indigo-600 text-lg">₱{{ number_format($order->total_amount, 2) }}</p>
                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium
                         {{ $order->status === 'completed' ? 'bg-green-100 text-green-800' :
                            ($order->status === 'cancelled' ? 'bg-red-100 text-red-800' :
