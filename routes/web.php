@@ -3,10 +3,12 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Routes ───────────────────────────────────────────
@@ -23,13 +25,40 @@ Route::get('/categories/{category}', [CategoryController::class, 'show'])->name(
 // ─── Authenticated Routes ─────────────────────────────────────
 Route::middleware('auth')->group(function () {
 
+    // Dashboard routes
+    Route::get('/dashboard', function () {
+        if (auth()->user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        return redirect()->route('customer.dashboard');
+    })->name('dashboard');
+    
+    Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
+        ->name('admin.dashboard');
+    
+    Route::get('/customer/dashboard', [DashboardController::class, 'customer'])
+        ->name('customer.dashboard');
+
     // Profile (from Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/dashboard', function () {
-                return view('dashboard');
-            })->name('dashboard');
+
+    // Two-Factor Authentication
+    Route::get('/two-factor-challenge', [TwoFactorController::class, 'show'])
+        ->name('two-factor.show');
+    Route::post('/two-factor-challenge', [TwoFactorController::class, 'verify'])
+        ->name('two-factor.verify');
+    Route::post('/two-factor-resend', [TwoFactorController::class, 'resend'])
+        ->name('two-factor.resend');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])
+        ->name('two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])
+        ->name('two-factor.disable');
+    Route::get('/two-factor/recovery-codes', [TwoFactorController::class, 'showRecoveryCodes'])
+        ->name('two-factor.recovery-codes');
+    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])
+        ->name('two-factor.recovery-codes.regenerate');
 
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -39,15 +68,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
-    // Reviews
-    Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    // Reviews (require email verification)
+    Route::middleware('verified')->group(function () {
+        Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    });
 
-    // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    // Orders (require email verification)
+    Route::middleware('verified')->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    });
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────

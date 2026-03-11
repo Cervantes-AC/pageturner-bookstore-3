@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
+use App\Notifications\NewOrderNotification;
+use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -66,6 +69,18 @@ class OrderController extends Controller
             Book::find($item['book_id'])->decrement('stock_quantity', $item['quantity']);
         }
 
+        // Load relationships for notifications
+        $order->load(['user', 'orderItems.book']);
+
+        // Notify customer about order placement
+        $order->user->notify(new OrderStatusNotification($order));
+
+        // Notify all admins about new order
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewOrderNotification($order));
+        }
+
         // Clear cart after successful order
         session()->forget('cart');
 
@@ -94,7 +109,11 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
+        $oldStatus = $order->status;
         $order->update(['status' => $request->status]);
+
+        // Notify customer about status change
+        $order->user->notify(new OrderStatusNotification($order, $oldStatus));
 
         return back()->with('success', 'Order status updated!');
     }

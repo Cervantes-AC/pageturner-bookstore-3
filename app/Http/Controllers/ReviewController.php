@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Review;
+use App\Models\User;
+use App\Notifications\NewReviewNotification;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -30,9 +32,19 @@ class ReviewController extends Controller
         if ($existingReview) {
             $existingReview->update($validated);
             $message = 'Review updated successfully!';
+            $review = $existingReview;
         } else {
-            Review::create($validated);
+            $review = Review::create($validated);
             $message = 'Review submitted successfully!';
+        }
+
+        // Load relationships for notification
+        $review->load(['user', 'book']);
+
+        // Notify all admins about new review
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewReviewNotification($review));
         }
 
         return redirect()->route('books.show', $book)
