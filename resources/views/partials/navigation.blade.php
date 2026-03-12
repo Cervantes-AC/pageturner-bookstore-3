@@ -46,6 +46,9 @@
                         @endif
                     </a>
 
+                    <!-- Notifications -->
+                    @include('partials.notification-bell')
+
                     <!-- Orders -->
                     <a href="{{ route('orders.index') }}" class="text-gray-700 hover:text-primary-600 p-2.5 rounded-lg hover:bg-primary-50 transition-all duration-200 group">
                         <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

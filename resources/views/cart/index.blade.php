@@ -50,7 +50,7 @@
                             </div>
 
                             <div class="flex flex-col items-end gap-3">
-                                <form action="{{ route('cart.update', $item['book']) }}" method="POST" class="flex items-center gap-2">
+                                <form action="{{ route('cart.update', $item['book']) }}" method="POST" class="flex items-center gap-2" data-toast-success="Cart updated successfully!">
                                     @csrf
                                     @method('PATCH')
                                     <input type="number" name="quantity" value="{{ $item['quantity'] }}"
@@ -59,7 +59,7 @@
                                     <button type="submit" class="btn-secondary text-sm">Update</button>
                                 </form>
 
-                                <form action="{{ route('cart.remove', $item['book']) }}" method="POST">
+                                <form action="{{ route('cart.remove', $item['book']) }}" method="POST" data-toast-success="Item removed from cart">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-lg">
@@ -109,7 +109,7 @@
                         Continue Shopping
                     </a>
 
-                    <form action="{{ route('cart.clear') }}" method="POST">
+                    <form action="{{ route('cart.clear') }}" method="POST" data-toast-success="Cart cleared">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn-secondary w-full text-red-600 hover:bg-red-50"
