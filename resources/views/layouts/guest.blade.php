@@ -60,7 +60,5 @@
             </p>
         </div>
     </div>
-    
-    @include('partials.toast-notifications')
 </body>
 </html>
