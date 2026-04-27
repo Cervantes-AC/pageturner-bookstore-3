@@ -6,5 +6,8 @@ use Maatwebsite\Excel\Concerns\ToArray;
 
 class BooksRowCounter implements ToArray
 {
-    public function array(array $array): void {}
+    public function array(array $array): void
+    {
+        // Used only for row counting; no processing needed
+    }
 }

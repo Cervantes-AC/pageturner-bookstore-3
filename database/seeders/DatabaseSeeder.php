@@ -518,6 +518,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('✓ Created ' . $totalOrders . ' sample orders with items');
         $this->command->info('✓ Admin: aaronclydeccervantes@gmail.com / password');
         $this->command->info('✓ Customer: customer@gmail.com / password');
+
+        // Lab 6 data
+        $this->call(Lab6Seeder::class);
     }
 
     private function generateISBN()

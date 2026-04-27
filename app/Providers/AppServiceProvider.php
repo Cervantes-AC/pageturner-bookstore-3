@@ -6,6 +6,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use OwenIt\Auditing\Models\Audit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureAuditChecksums();
 
         // Configure mail transport to bypass SSL verification for local development
         if (config('mail.default') === 'smtp') {
@@ -82,6 +84,26 @@ class AppServiceProvider extends ServiceProvider
 
             // Standard authenticated users: 60/min
             return Limit::perMinute(60)->by('standard|' . $user->id);
+        });
+    }
+
+    /**
+     * Attach a SHA-256 checksum to every new audit record for tamper-proof storage.
+     */
+    protected function configureAuditChecksums(): void
+    {
+        Audit::creating(function (Audit $audit) {
+            $payload = [
+                'user_id'        => $audit->user_id,
+                'event'          => $audit->event,
+                'auditable_type' => $audit->auditable_type,
+                'auditable_id'   => $audit->auditable_id,
+                'old_values'     => $audit->old_values,
+                'new_values'     => $audit->new_values,
+                'ip_address'     => $audit->ip_address,
+                'url'            => $audit->url,
+            ];
+            $audit->checksum = hash('sha256', json_encode($payload));
         });
     }
 }
