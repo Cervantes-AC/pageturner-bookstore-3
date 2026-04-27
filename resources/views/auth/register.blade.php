@@ -1,58 +1,49 @@
 <x-guest-layout>
-    <div class="mb-6">
-        <h2 class="text-2xl font-bold text-white">Create Account</h2>
-        <p class="text-gray-400 text-sm mt-1">Join PageTurner and start your reading journey</p>
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Create your account</h1>
+        <p class="text-gray-500 text-sm mt-1">Join PageTurner and start your reading journey</p>
     </div>
 
     <form method="POST" action="{{ route('register') }}" class="space-y-5">
         @csrf
 
-        <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Full Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="John Doe" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <label for="name" class="input-label">Full name</label>
+            <input id="name" type="text" name="name" value="{{ old('name') }}"
+                   class="input-field @error('name') border-red-400 @enderror"
+                   placeholder="John Doe" required autofocus autocomplete="name"/>
+            @error('name')<p class="input-error">{{ $message }}</p>@enderror
         </div>
 
-        <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email Address')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="your@email.com" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <label for="email" class="input-label">Email address</label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}"
+                   class="input-field @error('email') border-red-400 @enderror"
+                   placeholder="you@example.com" required autocomplete="username"/>
+            @error('email')<p class="input-error">{{ $message }}</p>@enderror
         </div>
 
-        <!-- Password -->
         <div>
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" 
-                            placeholder="••••••••" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <label for="password" class="input-label">Password</label>
+            <input id="password" type="password" name="password"
+                   class="input-field @error('password') border-red-400 @enderror"
+                   placeholder="Min. 8 characters" required autocomplete="new-password"/>
+            @error('password')<p class="input-error">{{ $message }}</p>@enderror
         </div>
 
-        <!-- Confirm Password -->
         <div>
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" 
-                            placeholder="••••••••" />
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+            <label for="password_confirmation" class="input-label">Confirm password</label>
+            <input id="password_confirmation" type="password" name="password_confirmation"
+                   class="input-field" placeholder="••••••••" required autocomplete="new-password"/>
         </div>
 
-        <div class="space-y-3">
-            <x-primary-button class="w-full justify-center">
-                {{ __('Create Account') }}
-            </x-primary-button>
+        <button type="submit" class="btn-primary w-full btn-lg">
+            Create Account
+        </button>
 
-            <div class="text-center text-sm text-gray-400">
-                Already have an account?
-                <a href="{{ route('login') }}" class="text-blue-400 hover:text-blue-300 font-medium transition">
-                    Sign in
-                </a>
-            </div>
-        </div>
+        <p class="text-center text-sm text-gray-500">
+            Already have an account?
+            <a href="{{ route('login') }}" class="text-primary-600 hover:text-primary-700 font-semibold">Sign in</a>
+        </p>
     </form>
 </x-guest-layout>

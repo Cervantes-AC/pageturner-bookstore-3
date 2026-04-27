@@ -1,140 +1,138 @@
 @extends('layouts.app')
-@section('title', 'All Books - PageTurner')
-@section('header')
-    <h1 class="text-3xl font-bold text-gray-900">All Books</h1>
-@endsection
+@section('title', 'Books — PageTurner')
 
 @section('content')
-    {{-- Search & Filter --}}
-    <div class="bg-white rounded-lg shadow mb-6">
-        <div class="p-6 border-b">
-            <h2 class="text-lg font-semibold text-gray-800">Filter Books</h2>
-        </div>
-        
-        <form action="{{ route('books.index') }}" method="GET" class="p-6">
-            {{-- Search --}}
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-medium mb-2">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Search by title, author, or ISBN..."
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+
+        {{-- Sidebar Filters --}}
+        <aside class="lg:w-64 flex-shrink-0">
+            <div class="card sticky top-20">
+                <div class="card-header">
+                    <h2 class="text-sm font-semibold text-gray-900">Filters</h2>
+                    @if(request()->hasAny(['search','category','year','min_price','max_price','sort']))
+                        <a href="{{ route('books.index') }}" class="text-xs text-primary-600 hover:text-primary-700 font-medium">Clear all</a>
+                    @endif
+                </div>
+                <form action="{{ route('books.index') }}" method="GET" class="p-4 space-y-5">
+                    <div>
+                        <label class="input-label">Search</label>
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                            </svg>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                   placeholder="Title, author, ISBN…"
+                                   class="input-field pl-9 text-sm"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="input-label">Category</label>
+                        <select name="category" class="input-field text-sm">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="input-label">Publication Year</label>
+                        <select name="year" class="input-field text-sm">
+                            <option value="">All Years</option>
+                            @foreach($years as $year)
+                                <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="input-label">Price Range (₱)</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" name="min_price" value="{{ request('min_price') }}"
+                                   placeholder="Min" step="0.01" min="0" class="input-field text-sm"/>
+                            <input type="number" name="max_price" value="{{ request('max_price') }}"
+                                   placeholder="Max" step="0.01" min="0" class="input-field text-sm"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="input-label">Sort By</label>
+                        <select name="sort" class="input-field text-sm">
+                            <option value="">Newest First</option>
+                            <option value="price_asc"  {{ request('sort') === 'price_asc'  ? 'selected' : '' }}>Price: Low → High</option>
+                            <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Price: High → Low</option>
+                            <option value="title_asc"  {{ request('sort') === 'title_asc'  ? 'selected' : '' }}>Title: A → Z</option>
+                            <option value="title_desc" {{ request('sort') === 'title_desc' ? 'selected' : '' }}>Title: Z → A</option>
+                            <option value="oldest"     {{ request('sort') === 'oldest'     ? 'selected' : '' }}>Oldest First</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full">Apply Filters</button>
+                </form>
+            </div>
+        </aside>
+
+        {{-- Main content --}}
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">All Books</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">{{ $books->total() }} {{ Str::plural('result', $books->total()) }}</p>
+                </div>
+                @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.books.create') }}" class="btn-primary btn-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Book
+                        </a>
+                    @endif
+                @endauth
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {{-- Category --}}
-                <div>
-                    <label class="block text-gray-700 text-sm font-medium mb-2">Category</label>
-                    <select name="category" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Year --}}
-                <div>
-                    <label class="block text-gray-700 text-sm font-medium mb-2">Publication Year</label>
-                    <select name="year" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Years</option>
-                        @foreach($years as $year)
-                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
-                                {{ $year }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Sort --}}
-                <div>
-                    <label class="block text-gray-700 text-sm font-medium mb-2">Sort By</label>
-                    <select name="sort" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">Default (Newest)</option>
-                        <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
-                        <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
-                        <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Title: A to Z</option>
-                        <option value="title_desc" {{ request('sort') == 'title_desc' ? 'selected' : '' }}>Title: Z to A</option>
-                        <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
-                        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
-                    </select>
-                </div>
-            </div>
-
-            {{-- Price Range --}}
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-medium mb-2">Price Range (₱)</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="min_price" value="{{ request('min_price') }}" 
-                           step="0.01" min="0" placeholder="Min (₱0.00)"
-                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    <input type="number" name="max_price" value="{{ request('max_price') }}" 
-                           step="0.01" min="0" placeholder="Max (₱9999.99)"
-                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-            </div>
-
-            {{-- Buttons --}}
-            <div class="flex gap-3">
-                <button type="submit" class="flex-1 bg-indigo-600 text-white px-6 py-2.5 rounded-md hover:bg-indigo-700 transition font-medium">
-                    Apply Filters
-                </button>
-                @if(request()->hasAny(['search', 'category', 'year', 'min_price', 'max_price', 'sort']))
-                    <a href="{{ route('books.index') }}" class="bg-gray-200 text-gray-700 px-6 py-2.5 rounded-md hover:bg-gray-300 transition font-medium">
-                        Clear All
-                    </a>
+            {{-- Active filters --}}
+            @if(request()->hasAny(['search','category','year','min_price','max_price']))
+            <div class="flex flex-wrap gap-2 mb-5">
+                @if(request('search'))
+                    <span class="badge-gray">Search: "{{ request('search') }}"</span>
+                @endif
+                @if(request('category'))
+                    <span class="badge-gray">{{ $categories->find(request('category'))?->name }}</span>
+                @endif
+                @if(request('year'))
+                    <span class="badge-gray">Year: {{ request('year') }}</span>
+                @endif
+                @if(request('min_price'))
+                    <span class="badge-gray">Min: ₱{{ number_format(request('min_price'), 2) }}</span>
+                @endif
+                @if(request('max_price'))
+                    <span class="badge-gray">Max: ₱{{ number_format(request('max_price'), 2) }}</span>
                 @endif
             </div>
-        </form>
-    </div>
+            @endif
 
-    {{-- Active Filters Summary --}}
-    @if(request()->hasAny(['search', 'category', 'year', 'min_price', 'max_price']))
-        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center justify-between flex-wrap gap-3">
-                <div class="flex flex-wrap gap-2 items-center">
-                    <span class="text-indigo-800 font-medium">Active Filters:</span>
-                    @if(request('search'))
-                        <span class="bg-white text-indigo-800 px-3 py-1 rounded-full text-sm border border-indigo-300">
-                            🔍 "{{ request('search') }}"
-                        </span>
-                    @endif
-                    @if(request('category'))
-                        <span class="bg-white text-indigo-800 px-3 py-1 rounded-full text-sm border border-indigo-300">
-                            📚 {{ $categories->find(request('category'))->name ?? 'Unknown' }}
-                        </span>
-                    @endif
-                    @if(request('year'))
-                        <span class="bg-white text-indigo-800 px-3 py-1 rounded-full text-sm border border-indigo-300">
-                            📅 {{ request('year') }}
-                        </span>
-                    @endif
-                    @if(request('min_price'))
-                        <span class="bg-white text-indigo-800 px-3 py-1 rounded-full text-sm border border-indigo-300">
-                            Min: ₱{{ number_format(request('min_price'), 2) }}
-                        </span>
-                    @endif
-                    @if(request('max_price'))
-                        <span class="bg-white text-indigo-800 px-3 py-1 rounded-full text-sm border border-indigo-300">
-                            Max: ₱{{ number_format(request('max_price'), 2) }}
-                        </span>
-                    @endif
+            @if($books->count())
+                <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+                    @foreach($books as $book)
+                        <x-book-card :book="$book"/>
+                    @endforeach
                 </div>
-                <span class="text-indigo-800 font-semibold">{{ $books->total() }} result(s)</span>
-            </div>
+                <div class="mt-8">{{ $books->withQueryString()->links() }}</div>
+            @else
+                <div class="card p-12 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-gray-500 text-sm">No books match your filters.</p>
+                    <a href="{{ route('books.index') }}" class="btn-secondary btn-sm mt-4 inline-flex">Clear filters</a>
+                </div>
+            @endif
         </div>
-    @endif
-
-    {{-- Books Grid --}}
-    @if($books->count())
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            @foreach($books as $book)
-                <x-book-card :book="$book" />
-            @endforeach
-        </div>
-        <div class="mt-8">{{ $books->withQueryString()->links() }}</div>
-    @else
-        <x-alert type="info">No books found matching your criteria.</x-alert>
-    @endif
+    </div>
+</div>
 @endsection

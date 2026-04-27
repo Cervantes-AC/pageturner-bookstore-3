@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
@@ -15,13 +18,13 @@ use Illuminate\Support\Facades\Route;
 // ─── Public Routes ───────────────────────────────────────────
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Book browsing (public)
-Route::get('/books', [BookController::class, 'index'])->name('books.index');
-Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
-
-// Category browsing (public)
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+// Book browsing (public) — rate limited
+Route::middleware('throttle:public')->group(function () {
+    Route::get('/books', [BookController::class, 'index'])->name('books.index');
+    Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+});
 
 // ─── Authenticated Routes ─────────────────────────────────────
 Route::middleware('auth')->group(function () {
@@ -89,10 +92,11 @@ Route::middleware('auth')->group(function () {
     // Creating orders requires email verification
     Route::middleware('verified')->group(function () {
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-        Route::get('/orders/verify/2fa', [OrderController::class, 'show2FAVerification'])->name('orders.verify2fa');
-        Route::post('/orders/verify/2fa', [OrderController::class, 'verify2FA'])->name('orders.verify2fa.submit');
-        Route::post('/orders/verify/2fa/resend', [OrderController::class, 'resend2FA'])->name('orders.verify2fa.resend');
     });
+
+    // ── Data Portability (Customer) ───────────────────────────
+    Route::get('/export/my-orders', [ImportExportController::class, 'exportMyOrders'])->name('export.my-orders');
+    Route::get('/export/my-data', [ImportExportController::class, 'exportMyData'])->name('export.my-data');
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────
@@ -111,6 +115,25 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
     Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
+
+    // ── Import / Export ───────────────────────────────────────
+    Route::get('/import', [ImportExportController::class, 'importForm'])->name('import.form');
+    Route::post('/import/books', [ImportExportController::class, 'importBooks'])->name('import.books');
+    Route::get('/import/template', [ImportExportController::class, 'downloadTemplate'])->name('import.template');
+
+    Route::get('/export', [ImportExportController::class, 'exportForm'])->name('export.form');
+    Route::post('/export/books', [ImportExportController::class, 'exportBooks'])->name('export.books');
+    Route::post('/export/orders', [ImportExportController::class, 'exportOrders'])->name('export.orders');
+    Route::post('/export/users', [ImportExportController::class, 'exportUsers'])->name('export.users');
+
+    // ── Audit Logs ────────────────────────────────────────────
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
+    Route::get('/audit-logs/{audit}', [AuditLogController::class, 'show'])->name('audit.show');
+    Route::post('/audit-logs/export', [AuditLogController::class, 'export'])->name('audit.export');
+
+    // ── Backup ────────────────────────────────────────────────
+    Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
+    Route::post('/backup/run', [BackupController::class, 'run'])->name('backup.run');
 });
 
 require __DIR__.'/auth.php';

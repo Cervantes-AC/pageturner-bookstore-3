@@ -113,10 +113,10 @@ function notificationBell() {
         notifications: [],
         unreadCount: 0,
         pollingInterval: null,
+        initialized: false,
         
         init() {
             this.fetchNotifications();
-            // Poll every 30 seconds for new notifications
             this.pollingInterval = setInterval(() => {
                 this.fetchNotifications();
             }, 30000);
@@ -134,19 +134,20 @@ function notificationBell() {
                 const response = await fetch('{{ route('notifications.unread') }}');
                 const data = await response.json();
                 
-                // Check if there are new notifications
                 const oldCount = this.unreadCount;
                 this.notifications = data.notifications;
                 this.unreadCount = data.count;
                 
-                // Show toast for new notifications
-                if (this.unreadCount > oldCount && oldCount > 0) {
-                    const newNotifications = this.unreadCount - oldCount;
+                // Only show toast for NEW notifications after the first load
+                if (this.initialized && this.unreadCount > oldCount) {
+                    const newCount = this.unreadCount - oldCount;
                     window.showToast(
-                        `You have ${newNotifications} new notification${newNotifications > 1 ? 's' : ''}`,
+                        `You have ${newCount} new notification${newCount > 1 ? 's' : ''}`,
                         'info'
                     );
                 }
+
+                this.initialized = true;
             } catch (error) {
                 console.error('Failed to fetch notifications:', error);
             }
