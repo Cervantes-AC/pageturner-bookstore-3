@@ -55,3 +55,11 @@ Schedule::command('audit:archive')
     ->withoutOverlapping()
     ->onSuccess(function () { Log::info('audit:archive completed.'); })
     ->onFailure(function () { Log::error('audit:archive FAILED.'); });
+
+// ── Lab 7 Scheduled Tasks ─────────────────────────────────────────────────────
+
+Schedule::command('app:refresh-materialized-views')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onSuccess(function () { Log::info('refresh-materialized-views completed.'); })
+    ->onFailure(function () { Log::error('refresh-materialized-views FAILED.'); });

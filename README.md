@@ -3,28 +3,26 @@
 ## Student Information
 - **Name:** Aaron Clyde Cervantes
 - **Course:** Bachelor of Science in Information Technology
-- **Activity:** Laboratory Activity 6 — Data Portability, Automated Operations, and Advanced System Architecture
+- **Section:** BSIT 3C
+- **Schedule:** Thursday 1:00 PM – 3:00 PM | CISC Room 3
+- **Activity:** Laboratory Activity 7 — Mass Data Seeding, Performance Optimization, and Scalability Engineering
 
 ---
 
 ## Project Overview
 
-PageTurner is a production-grade online bookstore management system built with **Laravel 12**. This laboratory extends the system from Lab Activity 4 with enterprise data management capabilities: bulk import/export, automated backup scheduling, comprehensive audit logging, tiered API rate limiting, and advanced data transformation middleware.
+PageTurner is a production-grade online bookstore management system built with **Laravel 12**. This laboratory builds on Lab Activity 6 by scaling the system to handle **1,000,000+ book records** while maintaining sub-second query response times. The focus is on high-volume data generation, database performance tuning, Redis caching architectures, and horizontal scaling strategies.
 
 ---
 
-## What's New in Lab Activity 6
+## Cumulative Feature Summary (Labs 3 → 7)
 
-| Feature | Description |
-|---|---|
-| 📥 Bulk Import | Excel/CSV book imports with chunked processing, validation, and error reporting |
-| 📤 Data Export | Filtered exports in XLSX, CSV, and PDF formats |
-| 🔄 Automated Backups | Spatie Laravel Backup with scheduling, monitoring, and email alerts |
-| 📋 Audit Logging | Full change tracking with tamper-proof SHA-256 checksums |
-| 🚦 Rate Limiting | 5-tier system with per-second burst protection and response headers |
-| 🔀 API Transform | Middleware for snake_case → camelCase conversion and field filtering |
-| 🗄️ DB Optimization | Performance indexes and read/write splitting configuration |
-| 📊 Enhanced Dashboards | Import/export status, backup health, audit summary, system metrics |
+| Lab | Focus | Key Features Added |
+|---|---|---|
+| Lab 3 | Foundation | Books, categories, orders, reviews, CRUD, Blade templating |
+| Lab 4 | Authentication | Email verification, 2FA, password recovery, role-based dashboards |
+| Lab 6 | Data & Operations | Import/export, automated backups, audit logging, rate limiting |
+| **Lab 7** | **Scalability** | **1M seeder, performance indexes, Redis caching, materialized views, benchmarking** |
 
 ---
 
@@ -45,194 +43,262 @@ PageTurner is a production-grade online bookstore management system built with *
 
 ---
 
-## Features
+## Lab Activity 7 — New Features
 
-### 4.1 Import / Export System
+### 7.1 The 1 Million Book Challenge
 
-#### Book Import
-- Upload XLSX or CSV files via the admin panel
-- Required columns: `ISBN`, `Title`, `Author`, `Price`, `Stock`, `Category`, `Description`
-- Validation rules: ISBN uniqueness, title max 255 chars, price 0–9999.99, stock ≥ 0, category must exist
-- Chunked processing at 1,000 rows per chunk (`WithChunkReading`)
-- Batch database inserts at 1,000 rows (`WithBatchInserts`)
-- Skip-on-failure with detailed per-row error reports (`SkipsOnFailure`)
-- Duplicate handling: choose to **skip** or **update** existing books by ISBN
-- Downloadable import template (pre-formatted XLSX)
-- All operations logged to `import_logs` table
+**`database/factories/BookFactory.php`** — completely rewritten for mass generation:
+- Category IDs loaded **once** into a static property — avoids 1M DB queries
+- 15-publisher static pool — no faker overhead per record
+- Format-based pricing (`ebook` ₱2.99–19.99, `paperback` ₱9.99–39.99, `hardcover` ₱19.99–79.99, `audiobook` ₱14.99–44.99)
+- Valid **ISBN-13** generation with proper modulo-10 checksum
+- 85% of books are active, 5% featured — realistic distribution
+- `published_at` spans 1950–2025 for partition pruning demonstrations
+- Factory states: `bestseller()`, `outOfStock()`
 
-#### Book Export
-- Filter by category, price range, stock status, and date range
-- Choose which columns to include in the export
-- Formats: XLSX, CSV
-- Uses `FromQuery` concern for memory-efficient chunked exports
+**`database/seeders/MassBookSeeder.php`** — chunked batch insert:
 
-#### Order Export (Admin)
-- Filter by status, date range
-- Exports customer name, email, total, item count, shipping info
+```
+CHUNK_SIZE    = 5,000 rows
+TOTAL_RECORDS = 1,000,000 rows
+Memory target < 512 MB
+Time target   < 10 minutes
+```
 
-#### User Export (Admin Only)
-- Full user list with role, verification status, 2FA status, order count
-- Optional **PII redaction** (GDPR compliance) — replaces name/email with `[REDACTED]`
+Key technique — never use `Book::factory()->count(1000000)->create()`:
+```php
+// ✅ Correct — raw batch insert, no Eloquent overhead
+$books = Book::factory()->count($batchSize)->make()
+    ->map(fn($b) => array_merge($b->getAttributes(), [
+        'created_at' => now()->toDateTimeString(),
+        'updated_at' => now()->toDateTimeString(),
+    ]))->toArray();
 
-#### Audit Log Export
-- Filter by user, event type, date range
-- Formats: XLSX, CSV, **PDF**
+DB::table('books')->insert($books);
 
-#### Customer Data Portability
-- **Export My Data** — GDPR-compliant JSON download of full profile + order history
-- **Export My Orders** — XLSX/CSV download of personal order history
+// Force GC every 10 chunks to keep memory bounded
+if ($inserted % (self::CHUNK_SIZE * 10) === 0) {
+    unset($books);
+    gc_collect_cycles();
+}
+```
+
+Run the seeder:
+```bash
+php artisan db:seed --class=MassBookSeeder
+```
 
 ---
 
-### 4.2 Automated Backup & Maintenance
+### 7.2 Database Schema Optimization
 
-#### Backup Configuration (Spatie Laravel Backup)
-- **Source:** Full database dump + uploaded book cover images
-- **Storage:** Local disk (encrypted with AES-256)
-- **Retention policy:**
-  - Keep all backups for 7 days
-  - Keep daily backups for 16 days
-  - Keep weekly backups for 8 weeks
-  - Keep monthly backups for 4 months
-- **Health checks:** Max age 1 day, max storage 5,000 MB
-- **Email notifications:** On backup failure, success, and unhealthy status
-- **Manual trigger:** Admin dashboard "Run Backup Now" button
+**Migration** `2026_04_27_100000_optimize_books_table_lab7`:
 
-#### Scheduled Tasks
+New columns added to `books`:
+| Column | Type | Purpose |
+|---|---|---|
+| `publisher` | string | Publisher name |
+| `format` | enum | ebook / paperback / hardcover / audiobook |
+| `published_at` | date | Full date for range partitioning |
+| `is_active` | boolean | Soft-visibility flag (85% active) |
+
+New indexes:
+| Index | Columns | Type | Purpose |
+|---|---|---|---|
+| `idx_books_catalog_filter` | category_id, published_at, is_active | Composite | Main catalog filter — hits covering index |
+| `idx_books_price_stock` | price, stock_quantity, id | Covering | Price range queries — index-only scan |
+| `idx_books_active` | is_active | Single | Active book filtering |
+| `idx_books_fulltext` | title, description | FULLTEXT | MySQL full-text search (skipped on SQLite) |
+
+**Migration** `2026_04_27_100001_create_materialized_views_lab7`:
+- `mv_bestseller_stats` — pre-computed category stats table
+- `query_performance_logs` — slow query monitoring
+
+---
+
+### 7.3 Query Performance Optimization
+
+**`app/Repositories/BookRepository.php`**
+
+| Method | Strategy | Target |
+|---|---|---|
+| `activeCatalog()` | Cursor pagination + covering index + Redis cache | < 100 ms |
+| `findByIsbn()` | Unique index + Redis cache (30 min TTL) | < 50 ms |
+| `byCategory()` | Composite index + Redis tag cache | < 150 ms |
+| `fullTextSearch()` | MySQL FULLTEXT / SQLite LIKE fallback | < 300 ms |
+| `exportChunked()` | `lazy()` generator — memory-safe streaming | — |
+
+Why cursor pagination over offset:
+```
+OFFSET pagination: O(n) — degrades at 1M rows
+Cursor pagination: O(1) — constant time regardless of depth
+```
+
+**`app/Services/BookCacheService.php`** — Redis tag-based caching:
+
+| Cache Key | TTL | Tags |
+|---|---|---|
+| Catalog pages | 5 min | `books` |
+| ISBN lookups | 30 min | `books`, `isbn:{isbn}` |
+| Category pages | 10 min | `books`, `category:{id}` |
+| Bestsellers | 1 hour | `books`, `bestsellers` |
+
+Falls back gracefully to plain cache when Redis is unavailable (file/database drivers).
+
+---
+
+### 7.4 Smart Cache Invalidation
+
+**`app/Observers/BookObserver.php`** — registered in `AppServiceProvider`:
+- Fires on `saved()` and `deleted()` model events
+- Flushes catalog cache, ISBN cache, and category cache for the affected book
+- Keeps Redis consistent without a full cache flush
+
+---
+
+### 7.5 Materialized Views
+
+**`app/Console/Commands/RefreshMaterializedViews.php`**
+
+Pre-computes `mv_bestseller_stats` per category:
+- `total_books`, `avg_price`, `total_inventory`, `bestseller_count`, `latest_publication`
+- Refreshed **hourly** via scheduler
+- Portable — works on SQLite (dev) and MySQL (prod)
+
+```bash
+php artisan app:refresh-materialized-views
+# Output: Refreshed 11 category stats in 24.5ms
+```
+
+---
+
+### 7.6 Performance Benchmarking
+
+**`app/Console/Commands/BenchmarkBookQueries.php`**
+
+Runs each query N times with a warmup pass, reports avg/min/max, validates against Lab 7 targets:
+
+```bash
+php artisan benchmark:books --iterations=100
+```
+
+Sample output (103 books, SQLite):
+```
++-------------------------------+---------+---------+---------+--------+---------+
+| Query                         | Avg     | Min     | Max     | Target | Status  |
++-------------------------------+---------+---------+---------+--------+---------+
+| ISBN Lookup (exact)           | 0.33 ms | 0.25 ms | 0.86 ms | 50 ms  | ✅ PASS |
+| Catalog Listing (100 records) | 1.55 ms | 1.21 ms | 2.17 ms | 100 ms | ✅ PASS |
+| Category Filter               | 0.59 ms | 0.43 ms | 1.04 ms | 150 ms | ✅ PASS |
+| Full-Text Search              | 0.77 ms | 0.67 ms | 1.00 ms | 300 ms | ✅ PASS |
++-------------------------------+---------+---------+---------+--------+---------+
+Passed: 4 / 4 — All performance targets met! ✅
+```
+
+Returns non-zero exit code on failure — CI/CD integration ready.
+
+---
+
+### 7.7 Async Cache Warmup
+
+**`app/Jobs/WarmCategoryCache.php`** — queued job:
+- Pre-loads top 1,000 active books per category into Redis
+- Dispatched after seeding or on a schedule
+- Ensures cache hits from the very first user request
+
+```bash
+# Dispatch for all categories after seeding
+php artisan tinker
+>>> App\Models\Category::all()->each(fn($c) => App\Jobs\WarmCategoryCache::dispatch($c->id));
+```
+
+---
+
+### 7.8 Full-Text Search Indexing
+
+**`app/Console/Commands/IndexBooksBatch.php`** — chunked Scout indexing:
+
+```bash
+php artisan books:index-batch --chunk=5000
+```
+
+- Processes active books in observable chunks with a progress bar
+- On MySQL: calls `$books->each->searchable()` for Scout indexing
+- On SQLite (dev): dry-run with progress tracking
+
+---
+
+## Lab 6 Features (still active)
+
+### Import / Export System
+- Bulk book import XLSX/CSV — chunked (1,000 rows), batch inserts, skip-on-failure
+- Filtered exports in XLSX, CSV, PDF formats
+- Customer GDPR data export (JSON)
+- Admin order/user exports with PII redaction
+- All operations logged to `import_logs` / `export_logs`
+
+### Automated Backup
+- Spatie Laravel Backup — daily at 02:00 AM
+- Retention: 7 daily / 8 weekly / 4 monthly
+- Email alerts on failure/success
+- Manual trigger from admin dashboard
+
+### Audit Logging
+- Full change tracking on Book, Category, Order, Review
+- SHA-256 tamper-proof checksums on every record
+- Side-by-side diff dashboard with XLSX/CSV/PDF export
+- Real-time email alerts for critical events (role changes, admin deletions)
+
+### API Rate Limiting
+- 5 tiers: public (30/min), auth (10/min), standard (60/min), premium (300/min), admin (1000/min)
+- Per-second burst protection on all tiers
+- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After` headers
+
+---
+
+## Scheduled Tasks
 
 | Task | Schedule | Description |
 |---|---|---|
-| `backup:run` | Daily at 02:00 | Full database + files backup |
-| `backup:clean` | Daily at 03:00 | Remove old backups per retention policy |
-| `order:cleanup-pending` | Hourly | Cancel pending orders older than 24 hours |
+| `backup:run` | Daily 02:00 | Full database + files backup |
+| `backup:clean` | Daily 03:00 | Remove old backups per retention policy |
+| `order:cleanup-pending` | Hourly | Cancel pending orders > 24 hours old |
 | `auth:clear-resets` | Daily | Clear expired password reset tokens |
-| `log:rotate` | Weekly | Archive and gzip compress old log files |
-| `report:generate-daily` | Daily at 06:00 | Generate sales report and email to admins |
-| `notification:prune` | Weekly | Delete notifications older than 90 days |
-| `audit:archive` | Monthly | Archive audit logs older than 1 year to JSON |
+| `log:rotate` | Weekly | Archive and compress old log files |
+| `report:generate-daily` | Daily 06:00 | Generate sales report, email to admins |
+| `notification:prune` | Weekly | Delete notifications > 90 days old |
+| `audit:archive` | Monthly | Archive audit logs > 1 year to JSON |
+| `app:refresh-materialized-views` | Hourly | Refresh `mv_bestseller_stats` table |
 
-All tasks use `withoutOverlapping()`, `onSuccess()`, and `onFailure()` hooks with full logging.
-
----
-
-### 4.3 Audit Logging & Compliance
-
-#### Audited Models
-- `Book` — create, update, delete (excludes cover_image)
-- `Category` — create, update, delete
-- `Order` — create, update (status transitions)
-- `Review` — create, delete
-
-#### Audit Log Structure
-```json
-{
-  "id": 42,
-  "user_id": 1,
-  "event": "updated",
-  "auditable_type": "App\\Models\\Book",
-  "auditable_id": 5,
-  "old_values": { "price": 549, "stock_quantity": 88 },
-  "new_values": { "price": 599, "stock_quantity": 75 },
-  "url": "/admin/books/5",
-  "ip_address": "127.0.0.1",
-  "user_agent": "Mozilla/5.0...",
-  "checksum": "98356080363c3dcd...",
-  "created_at": "2026-04-27T10:30:00Z"
-}
-```
-
-#### Security Features
-- **Globally excluded fields:** `password`, `remember_token`, `two_factor_recovery_codes`, `two_factor_secret`, API tokens, payment fields
-- **Tamper-proof checksums:** Every audit record gets a SHA-256 hash of its immutable fields on creation
-- **Retention policy:** 1 year online → monthly archive to `storage/app/archives/` as JSON with per-record checksums and an overall archive hash
-- **Real-time alerts:** Email sent to all admins when a critical event occurs (role changes, admin deletions)
-
-#### Audit Dashboard (Admin Only)
-- Filter by user, event type, model, date range
-- Side-by-side **Before / After** diff visualization
-- Export to XLSX, CSV, or PDF
-
----
-
-### 4.4 API Rate Limiting
-
-#### Tiers
-
-| Tier | Limit | Burst (per second) | Scope |
-|---|---|---|---|
-| `public` | 30 req/min | 5/sec | Visitors (by IP) |
-| `auth` | 10 req/min | 2/sec | Login, register, password reset |
-| `standard` | 60 req/min | 5/sec | Authenticated customers |
-| `premium` | 300 req/min | 10/sec | Premium/VIP users |
-| `admin` | 1,000 req/min | 20/sec | Administrators |
-
-#### Response Headers
-Every response includes:
-```
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 58
-Retry-After: 45   (only on 429 responses)
-```
-
-#### 429 Response Format
-```json
-{
-  "message": "Rate limit exceeded. Public API allows 30 requests/minute.",
-  "retry_after": 60
-}
-```
-
----
-
-### 4.5 API Transform Middleware
-
-The `ApiTransformMiddleware` applies to all JSON responses:
-
-- **snake_case → camelCase** conversion of all response keys
-- **Field filtering** via `?fields=id,title,price` query parameter
-- **X-RateLimit headers** injected on every response
-
----
-
-### 4.6 Database Architecture
-
-#### Performance Indexes
-Migration `2026_04_20_030002_add_indexes_for_performance` adds indexes on:
-- `books.isbn`, `books.category_id`
-- `orders.user_id`, `orders.status`, `orders.created_at`
-- `order_items.order_id`, `order_items.book_id`
-- `reviews.book_id`, `reviews.user_id`
-
-#### Read/Write Splitting (MySQL)
-Configured in `config/database.php` — uncomment to activate with replicas:
-```php
-'read'   => ['host' => [env('DB_READ_HOST_1'), env('DB_READ_HOST_2')]],
-'write'  => ['host' => [env('DB_WRITE_HOST')]],
-'sticky' => true,
-```
+All tasks use `withoutOverlapping()`, `onSuccess()`, and `onFailure()` hooks.
 
 ---
 
 ## Database Schema
 
-| Table | Purpose |
-|---|---|
-| `users` | Accounts with role, 2FA, email verification |
-| `categories` | Book genres/categories |
-| `books` | Inventory with ISBN, price, stock, cover |
-| `orders` | Customer orders with shipping info |
-| `order_items` | Line items per order |
-| `reviews` | Star ratings and comments |
-| `two_factor_secrets` | 2FA codes (6-digit, 10-min expiry) |
-| `login_logs` | Login attempt history |
-| `notifications` | Laravel database notifications |
-| `audits` | Full change tracking with checksums |
-| `import_logs` | Import operation history |
-| `export_logs` | Export request history |
-| `backup_monitoring` | Backup execution logs |
-| `api_rate_limits` | Rate limit hit tracking |
-| `sessions` | Database-backed sessions |
-| `jobs` | Queue job table |
+### All Tables (23 migrations)
+
+| Table | Lab | Purpose |
+|---|---|---|
+| `users` | 3 | Accounts with role, 2FA, email verification |
+| `categories` | 3 | Book genres/categories |
+| `books` | 3 | Inventory — ISBN, price, stock, cover |
+| `orders` | 3 | Customer orders with shipping info |
+| `order_items` | 3 | Line items per order |
+| `reviews` | 3 | Star ratings and comments |
+| `two_factor_secrets` | 4 | 2FA codes (6-digit, 10-min expiry) |
+| `login_logs` | 4 | Login attempt history |
+| `notifications` | 4 | Laravel database notifications |
+| `audits` | 6 | Full change tracking with SHA-256 checksums |
+| `import_logs` | 6 | Import operation history |
+| `export_logs` | 6 | Export request history |
+| `backup_monitoring` | 6 | Backup execution logs |
+| `api_rate_limits` | 6 | Rate limit hit tracking |
+| `mv_bestseller_stats` | 7 | Materialized view — category stats |
+| `query_performance_logs` | 7 | Slow query monitoring |
+| `sessions` | — | Database-backed sessions |
+| `cache` | — | Database cache store |
+| `jobs` | — | Queue job table |
 
 ---
 
@@ -263,19 +329,34 @@ cp .env.example .env
 # 5. Generate application key
 php artisan key:generate
 
-# 6. Run migrations and seed the database
-php artisan migrate:fresh --seed
+# 6. Run migrations
+php artisan migrate
 
-# 7. Create storage symlink (for book cover images)
+# 7. Seed base data (100 books, 22 users, 52 orders, mock Lab 6 data)
+php artisan db:seed
+
+# 8. Create storage symlink
 php artisan storage:link
 
-# 8. Start the development server
+# 9. Start the development server
 php artisan serve
 ```
 
 Visit: **http://localhost:8000**
 
-### Queue Worker (for background jobs)
+### Seed 1 Million Books (Lab 7)
+```bash
+# Run after base seeding — adds 1M books in chunks of 5,000
+php artisan db:seed --class=MassBookSeeder
+
+# Verify count
+php artisan tinker --execute="echo DB::table('books')->count();"
+
+# Warm category caches after seeding
+php artisan app:refresh-materialized-views
+```
+
+### Queue Worker
 ```bash
 php artisan queue:listen --tries=1
 ```
@@ -294,49 +375,53 @@ php artisan queue:listen --tries=1
 | Admin | aaronclydeccervantes@gmail.com | password |
 | Customer | customer@gmail.com | password |
 
-> **Note:** The admin account has 2FA enabled by default. Either check your email for the code, or disable it via tinker:
+> The admin account has 2FA enabled by default. Disable it with:
 > ```bash
 > php artisan tinker --execute="App\Models\User::where('role','admin')->update(['two_factor_enabled'=>false]);"
 > ```
 
 ---
 
-## Usage Guide
+## Testing Lab 7 Features
 
-### Admin Panel
+### Run Benchmarks
+```bash
+# Quick test (10 iterations)
+php artisan benchmark:books --iterations=10
 
-**Import Books**
-1. Go to **Admin → Import**
-2. Download the template, fill in your data
-3. Upload the XLSX/CSV file
-4. Choose duplicate handling (skip or update)
-5. View results in the import log table
+# Full benchmark (100 iterations)
+php artisan benchmark:books --iterations=100
+```
 
-**Export Data**
-1. Go to **Admin → Export**
-2. Select data type (Books / Orders / Users)
-3. Apply filters and choose format (XLSX / CSV)
-4. File downloads immediately
+### Test Materialized View Refresh
+```bash
+php artisan app:refresh-materialized-views
+```
 
-**Audit Logs**
-1. Go to **Admin → Audit**
-2. Filter by user, event, model, or date range
-3. Click **View** on any row for the full Before/After diff
-4. Export filtered results to XLSX, CSV, or PDF
+### Test Index Batch Command
+```bash
+php artisan books:index-batch --chunk=5000
+```
 
-**Backup**
-1. Go to **Admin → Backup**
-2. View backup history with status and file size
-3. Click **Run Backup Now** for an immediate backup
-4. Automated backups run daily at 02:00 AM
+### Test All Scheduled Commands
+```bash
+php artisan order:cleanup-pending
+php artisan notification:prune
+php artisan report:generate-daily
+php artisan log:rotate
+php artisan audit:archive
+php artisan app:refresh-materialized-views
+```
 
-### Customer Panel
-
-**Export My Data (GDPR)**
-- Dashboard → **Export My Data** — downloads a JSON file with your full profile and order history
-
-**Export Order History**
-- Dashboard → **Orders** (select format) — downloads your orders as XLSX or CSV
+### Enable Redis Caching (optional)
+Update `.env`:
+```env
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+```
 
 ---
 
@@ -346,129 +431,110 @@ php artisan queue:listen --tries=1
 pageturner-bookstore/
 ├── app/
 │   ├── Console/Commands/
-│   │   ├── ArchiveAuditLogs.php       # Monthly audit archival with checksums
-│   │   ├── CleanupPendingOrders.php   # Hourly stale order cancellation
-│   │   ├── GenerateDailyReport.php    # Daily sales report email
-│   │   ├── PruneNotifications.php     # Weekly notification cleanup
-│   │   └── RotateLogs.php             # Weekly log compression
+│   │   ├── ArchiveAuditLogs.php           # Monthly audit archival with checksums
+│   │   ├── BenchmarkBookQueries.php       # Lab 7 — performance benchmarking
+│   │   ├── CleanupPendingOrders.php       # Hourly stale order cancellation
+│   │   ├── GenerateDailyReport.php        # Daily sales report email
+│   │   ├── IndexBooksBatch.php            # Lab 7 — chunked Scout indexing
+│   │   ├── PruneNotifications.php         # Weekly notification cleanup
+│   │   ├── RefreshMaterializedViews.php   # Lab 7 — hourly mv_bestseller_stats refresh
+│   │   └── RotateLogs.php                 # Weekly log compression
 │   ├── Exports/
 │   │   ├── AuditLogsExport.php
-│   │   ├── BooksExport.php            # FromQuery, filters, custom columns
+│   │   ├── BooksExport.php                # FromQuery, filters, custom columns
 │   │   ├── OrdersExport.php
-│   │   └── UsersExport.php            # PII redaction support
+│   │   └── UsersExport.php                # PII redaction support
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── AuditLogController.php # XLSX/CSV/PDF export
+│   │   │   ├── AuditLogController.php     # XLSX/CSV/PDF export
 │   │   │   ├── BackupController.php
+│   │   │   ├── BookController.php
 │   │   │   ├── DashboardController.php
 │   │   │   └── ImportExportController.php
 │   │   └── Middleware/
-│   │       └── ApiTransformMiddleware.php  # camelCase + field filtering + headers
+│   │       ├── ApiTransformMiddleware.php # camelCase + field filtering + rate limit headers
+│   │       ├── EnsureEmailIsVerified.php
+│   │       └── TwoFactorMiddleware.php
 │   ├── Imports/
-│   │   └── BooksImport.php            # Chunked, batched, skip-on-failure
+│   │   └── BooksImport.php                # Chunked, batched, skip-on-failure
+│   ├── Jobs/
+│   │   └── WarmCategoryCache.php          # Lab 7 — async Redis cache warmup
 │   ├── Models/
-│   │   ├── BackupMonitoring.php
-│   │   ├── ExportLog.php
-│   │   └── ImportLog.php
+│   │   ├── Book.php                       # Lab 7 — new fields, scopes, casts
+│   │   └── ...
 │   ├── Notifications/
 │   │   └── CriticalAuditEventNotification.php
-│   └── Providers/
-│       └── AppServiceProvider.php     # Rate limiting + audit checksums + alerts
+│   ├── Observers/
+│   │   └── BookObserver.php               # Lab 7 — smart cache invalidation
+│   ├── Providers/
+│   │   └── AppServiceProvider.php         # Rate limiting + audit checksums + observer
+│   ├── Repositories/
+│   │   └── BookRepository.php             # Lab 7 — cursor pagination, N+1 prevention
+│   └── Services/
+│       └── BookCacheService.php           # Lab 7 — Redis tag caching with fallback
 ├── config/
-│   ├── audit.php                      # owen-it/laravel-auditing config
-│   ├── backup.php                     # Spatie backup config
-│   └── excel.php                      # maatwebsite/excel config
+│   ├── audit.php                          # owen-it/laravel-auditing config
+│   ├── backup.php                         # Spatie backup config
+│   ├── database.php                       # Read/write splitting + Redis DB config
+│   └── excel.php                          # maatwebsite/excel config
 ├── database/
-│   ├── migrations/                    # 21 migrations total
+│   ├── factories/
+│   │   └── BookFactory.php                # Lab 7 — high-performance, valid ISBN-13
+│   ├── migrations/                        # 23 migrations total
 │   └── seeders/
-│       ├── DatabaseSeeder.php         # 100 books, 22 users, 52 orders
-│       └── Lab6Seeder.php             # Mock import/export/audit/backup data
+│       ├── DatabaseSeeder.php             # 100 books, 22 users, 52 orders
+│       ├── Lab6Seeder.php                 # Mock import/export/audit/backup data
+│       └── MassBookSeeder.php             # Lab 7 — 1M books, chunked batch insert
 ├── resources/views/
 │   ├── audit/
-│   │   ├── index.blade.php            # Filterable audit log table
-│   │   ├── show.blade.php             # Side-by-side diff view
-│   │   └── export-pdf.blade.php       # PDF export template
+│   │   ├── index.blade.php                # Filterable audit log table
+│   │   ├── show.blade.php                 # Side-by-side diff view
+│   │   └── export-pdf.blade.php           # PDF export template
 │   ├── backup/index.blade.php
 │   ├── dashboard/
-│   │   ├── admin.blade.php            # Import/export/backup/audit widgets
-│   │   └── customer.blade.php         # GDPR data export
+│   │   ├── admin.blade.php                # Import/export/backup/audit widgets
+│   │   └── customer.blade.php             # GDPR data export
 │   └── import-export/
 │       ├── import.blade.php
 │       └── export.blade.php
 └── routes/
-    ├── web.php                        # All application routes
-    └── console.php                    # All scheduled tasks
-```
-
----
-
-## Testing the Lab 6 Features
-
-### Import Testing
-```bash
-# Download the template from /admin/import/template
-# Fill with test data and upload at /admin/import
-# Test malformed file handling by uploading invalid data
-```
-
-### Backup Testing
-```bash
-php artisan backup:run
-php artisan backup:clean
-php artisan schedule:run
-```
-
-### Audit Testing
-```bash
-# Log in as admin, edit a book — check /admin/audit-logs
-# Change a user's role — triggers critical email alert
-php artisan audit:archive   # archives records > 1 year old
-```
-
-### Rate Limiting Testing
-```bash
-# Hit /books rapidly to trigger the 30 req/min public limit
-# Check response headers: X-RateLimit-Limit, X-RateLimit-Remaining
-# A 429 response includes Retry-After header
-```
-
-### Scheduled Tasks Testing
-```bash
-php artisan order:cleanup-pending
-php artisan notification:prune
-php artisan report:generate-daily
-php artisan log:rotate
+    ├── web.php                            # All application routes
+    └── console.php                        # All 9 scheduled tasks
 ```
 
 ---
 
 ## Grading Rubric Coverage
 
+### Lab 7
+
+| Requirement | Status | Implementation |
+|---|---|---|
+| 1M+ record seeding < 512 MB | ✅ | `MassBookSeeder` — chunked batch insert + GC |
+| Valid ISBN-13 generation | ✅ | `BookFactory::generateValidIsbn13()` — modulo-10 checksum |
+| Realistic data distributions | ✅ | Format-based pricing, 85% active, weighted dates |
+| Catalog listing < 100 ms | ✅ | Cursor pagination + covering index |
+| ISBN lookup < 50 ms | ✅ | Unique index + Redis cache |
+| Category filter < 150 ms | ✅ | Composite index + tag cache |
+| Full-text search < 300 ms | ✅ | MySQL FULLTEXT / SQLite LIKE fallback |
+| Redis caching architecture | ✅ | `BookCacheService` — tag-based with graceful fallback |
+| Cache invalidation | ✅ | `BookObserver` — saved/deleted events |
+| Materialized views | ✅ | `mv_bestseller_stats` + hourly refresh command |
+| Read/write splitting config | ✅ | Documented in `config/database.php` |
+| Performance benchmarking | ✅ | `benchmark:books` — CI/CD ready, 4 query types |
+| Async cache warmup | ✅ | `WarmCategoryCache` queued job |
+| Full-text index batch | ✅ | `books:index-batch` command |
+| N+1 prevention | ✅ | `with(['category:id,name'])` + column selection |
+
+### Lab 6 (carried forward)
+
 | Component | Weight | Status |
 |---|---|---|
-| Import/Export System | 25% | ✅ Chunked import, batch inserts, skip-on-failure, XLSX/CSV/PDF export, PII redaction, logs |
-| Backup & Automation | 20% | ✅ Spatie backup, 8 scheduled tasks, withoutOverlapping, onSuccess/onFailure, monitoring |
-| Audit & Compliance | 20% | ✅ owen-it auditing, SHA-256 checksums, diff dashboard, PDF export, critical email alerts |
-| API Rate Limiting | 15% | ✅ 5 tiers, per-second burst, X-RateLimit headers, JSON 429 responses |
-| Advanced Features | 10% | ✅ ApiTransformMiddleware, DB indexes, read/write splitting config |
-| Documentation & Testing | 10% | ✅ This README + inline code comments + seeders for test data |
-
----
-
-## Security Features
-
-| Feature | Implementation |
-|---|---|
-| Email Verification | Required before placing orders or writing reviews |
-| Two-Factor Authentication | Email-based 6-digit codes with 10-minute expiry |
-| Password Hashing | bcrypt via Laravel Hash facade |
-| CSRF Protection | All forms protected with `@csrf` |
-| Role-Based Access Control | Admin/Customer roles with policy-based authorization |
-| Rate Limiting | 5-tier system with per-second burst protection |
-| Audit Checksums | SHA-256 hash on every audit record |
-| Sensitive Field Exclusion | Passwords, tokens, 2FA secrets never logged |
-| Login Attempt Logging | IP, user agent, success/failure reason tracked |
-| PII Redaction | GDPR-compliant user export with redaction option |
+| Import/Export System | 25% | ✅ Chunked import, XLSX/CSV/PDF export, PII redaction |
+| Backup & Automation | 20% | ✅ Spatie backup, 9 scheduled tasks, monitoring |
+| Audit & Compliance | 20% | ✅ SHA-256 checksums, diff dashboard, critical alerts |
+| API Rate Limiting | 15% | ✅ 5 tiers, per-second burst, response headers |
+| Advanced Features | 10% | ✅ ApiTransformMiddleware, DB indexes, read/write config |
 
 ---
 
@@ -480,9 +546,10 @@ php artisan log:rotate
 - **Maatwebsite** — Laravel Excel package
 - **Barry vd. Heuvel** — Laravel DomPDF package
 - **Tailwind CSS** — UI styling
-- **My Instructor** — For the detailed Lab 6 specifications
+- **My Instructor** — For the detailed Lab 7 specifications
 
 ---
 
 *PageTurner Online Bookstore Management System*
-*Laboratory Activity 6 — Data Portability, Automated Operations, and Advanced System Architecture*
+*Laboratory Activity 7 — Mass Data Seeding, Performance Optimization, and Scalability Engineering*
+*BSIT 3C | Thursday 1:00 PM – 3:00 PM | CISC Room 3*

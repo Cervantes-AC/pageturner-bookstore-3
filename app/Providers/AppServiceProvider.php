@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use OwenIt\Auditing\Models\Audit;
+use App\Models\Book;
 use App\Models\User;
 use App\Notifications\CriticalAuditEventNotification;
+use App\Observers\BookObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind BookRepository and BookCacheService as singletons
+        $this->app->singleton(\App\Services\BookCacheService::class);
+        $this->app->singleton(\App\Repositories\BookRepository::class);
     }
 
     /**
@@ -27,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->configureAuditChecksums();
+
+        // Lab 7 — Register BookObserver for cache invalidation
+        Book::observe(BookObserver::class);
 
         // Configure mail transport to bypass SSL verification for local development
         if (config('mail.default') === 'smtp') {
