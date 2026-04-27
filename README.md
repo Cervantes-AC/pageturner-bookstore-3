@@ -380,4 +380,5 @@ This project was created for educational purposes as part of coursework requirem
 
 **Created with ❤️ for Laboratory Activity 3**  
 *Routing, Controllers, Views, Blade Templating, and Database Operations*  
-*PageTurner Online Bookstore Management System*
+*PageTurner Online Bookstore Management System*#   p a g e t u r n e r - b o o k s t o r e - 3  
+ 
