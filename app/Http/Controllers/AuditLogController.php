@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AuditLogsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use OwenIt\Auditing\Models\Audit;
@@ -47,10 +48,26 @@ class AuditLogController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $request->validate(['format' => 'required|in:xlsx,csv']);
+        $request->validate(['format' => 'required|in:xlsx,csv,pdf']);
 
-        $filename = 'audit_logs_' . now()->format('Ymd_His') . '.' . $request->format;
+        $filters  = $request->only(['user_id', 'event', 'date_from', 'date_to']);
+        $filename = 'audit_logs_' . now()->format('Ymd_His');
 
-        return Excel::download(new AuditLogsExport($request->only(['user_id', 'event', 'date_from', 'date_to'])), $filename);
+        if ($request->format === 'pdf') {
+            $query = Audit::with('user')->latest();
+            if (!empty($filters['user_id']))   $query->where('user_id', $filters['user_id']);
+            if (!empty($filters['event']))      $query->where('event', $filters['event']);
+            if (!empty($filters['date_from']))  $query->whereDate('created_at', '>=', $filters['date_from']);
+            if (!empty($filters['date_to']))    $query->whereDate('created_at', '<=', $filters['date_to']);
+
+            $logs = $query->take(500)->get(); // cap PDF at 500 rows
+
+            $pdf = Pdf::loadView('audit.export-pdf', compact('logs', 'filters'))
+                ->setPaper('a4', 'landscape');
+
+            return $pdf->download($filename . '.pdf');
+        }
+
+        return Excel::download(new AuditLogsExport($filters), $filename . '.' . $request->format);
     }
 }

@@ -46,6 +46,18 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
+            /*
+            |------------------------------------------------------------------
+            | Read/Write Splitting (Section 4.5 — Advanced Feature)
+            |------------------------------------------------------------------
+            | Uncomment and configure read/write hosts when replicas are
+            | available. The 'sticky' option ensures immediate read-after-write
+            | consistency within the same request cycle.
+            |
+            | 'read'  => ['host' => [env('DB_READ_HOST_1', '192.168.1.2'), env('DB_READ_HOST_2', '192.168.1.3')]],
+            | 'write' => ['host' => [env('DB_WRITE_HOST',  '192.168.1.1')]],
+            | 'sticky' => true,
+            */
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),

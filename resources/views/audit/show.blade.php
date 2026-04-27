@@ -28,30 +28,32 @@
         </div>
 
         @if($audit->old_values || $audit->new_values)
+        @php
+            // Strip timestamp-only keys from the diff display
+            $skipKeys = ['created_at', 'updated_at', 'deleted_at'];
+            $oldValues = collect($audit->old_values ?? [])->except($skipKeys)->all();
+            $newValues = collect($audit->new_values ?? [])->except($skipKeys)->all();
+        @endphp
         <h2 class="text-lg font-semibold text-gray-900 mb-3">Changes (Diff)</h2>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <h3 class="text-sm font-medium text-red-700 mb-2">Before</h3>
                 <div class="bg-red-50 border border-red-200 rounded-md p-3 text-xs font-mono overflow-auto max-h-64">
-                    @if($audit->old_values)
-                        @foreach($audit->old_values as $key => $val)
-                            <div class="py-0.5"><span class="text-red-600 font-semibold">{{ $key }}:</span> {{ is_array($val) ? json_encode($val) : $val }}</div>
-                        @endforeach
-                    @else
+                    @forelse($oldValues as $key => $val)
+                        <div class="py-0.5"><span class="text-red-600 font-semibold">{{ $key }}:</span> {{ is_array($val) ? json_encode($val) : $val }}</div>
+                    @empty
                         <span class="text-gray-400">—</span>
-                    @endif
+                    @endforelse
                 </div>
             </div>
             <div>
                 <h3 class="text-sm font-medium text-green-700 mb-2">After</h3>
                 <div class="bg-green-50 border border-green-200 rounded-md p-3 text-xs font-mono overflow-auto max-h-64">
-                    @if($audit->new_values)
-                        @foreach($audit->new_values as $key => $val)
-                            <div class="py-0.5"><span class="text-green-600 font-semibold">{{ $key }}:</span> {{ is_array($val) ? json_encode($val) : $val }}</div>
-                        @endforeach
-                    @else
+                    @forelse($newValues as $key => $val)
+                        <div class="py-0.5"><span class="text-green-600 font-semibold">{{ $key }}:</span> {{ is_array($val) ? json_encode($val) : $val }}</div>
+                    @empty
                         <span class="text-gray-400">—</span>
-                    @endif
+                    @endforelse
                 </div>
             </div>
         </div>

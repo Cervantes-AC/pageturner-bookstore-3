@@ -10,6 +10,7 @@
             <select name="format" class="rounded border-gray-300 text-sm">
                 <option value="xlsx">XLSX</option>
                 <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-gray-700 text-white text-sm font-medium rounded-md hover:bg-gray-800">
                 Export
@@ -34,8 +35,14 @@
             </select>
             <input type="text" name="auditable_type" value="{{ request('auditable_type') }}"
                    placeholder="Model (e.g. Book)" class="rounded border-gray-300 text-sm">
-            <input type="date" name="date_from" value="{{ request('date_from') }}" class="rounded border-gray-300 text-sm">
-            <input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded border-gray-300 text-sm">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500 font-medium">Date From</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="rounded border-gray-300 text-sm">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs text-gray-500 font-medium">Date To</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded border-gray-300 text-sm">
+            </div>
         </div>
         <div class="mt-3 flex gap-2">
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">Filter</button>
@@ -73,7 +80,12 @@
                     <td class="px-4 py-3 text-gray-600">{{ $log->user?->name ?? 'System' }}</td>
                     <td class="px-4 py-3 text-gray-500 text-xs">
                         @if($log->new_values)
-                            {{ count($log->new_values) }} field(s) changed
+                            @php
+                                $changedCount = collect($log->new_values)
+                                    ->except(['created_at','updated_at','deleted_at'])
+                                    ->count();
+                            @endphp
+                            {{ $changedCount }} field(s) changed
                         @else
                             —
                         @endif
