@@ -4,20 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Services\BookCacheService;
 use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
+    public function __construct(
+        private readonly BookCacheService $cacheService,
+    ) {}
+
     public function index(Request $request)
     {
-        $query = Book::with('category');
+        $query = Book::select([
+            'id', 'isbn', 'title', 'author', 'price',
+            'stock_quantity', 'published_at', 'category_id',
+            'cover_image_url', 'format',
+        ])->with('category:id,name');
 
-        // Category filter
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        // Search filter (title, author, ISBN)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -27,12 +34,10 @@ class BookController extends Controller
             });
         }
 
-        // Year filter
         if ($request->filled('year')) {
             $query->where('publication_year', $request->year);
         }
 
-        // Price range filter
         if ($request->filled('min_price')) {
             $query->where('price', '>=', $request->min_price);
         }
@@ -40,7 +45,6 @@ class BookController extends Controller
             $query->where('price', '<=', $request->max_price);
         }
 
-        // Sort filter
         if ($request->filled('sort')) {
             switch ($request->sort) {
                 case 'price_asc':
@@ -56,22 +60,21 @@ class BookController extends Controller
                     $query->orderBy('title', 'desc');
                     break;
                 case 'newest':
-                    $query->orderBy('created_at', 'desc');
+                    $query->orderBy('published_at', 'desc');
                     break;
                 case 'oldest':
-                    $query->orderBy('created_at', 'asc');
+                    $query->orderBy('published_at', 'asc');
                     break;
                 default:
-                    $query->orderBy('created_at', 'desc');
+                    $query->orderBy('published_at', 'desc');
             }
         } else {
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('published_at', 'desc');
         }
 
         $books = $query->paginate(12);
         $categories = Category::all();
-        
-        // Get available years for filter
+
         $years = Book::whereNotNull('publication_year')
                     ->distinct()
                     ->orderBy('publication_year', 'desc')
@@ -101,14 +104,13 @@ class BookController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|image|max:2048',
+            'cover_image_url' => 'nullable|url|max:2048',
             'is_featured' => 'nullable|boolean',
+            'format' => 'nullable|string|in:hardcover,paperback,ebook,audiobook',
         ]);
 
-        // Auto-generate ISBN
         $validated['isbn'] = $this->generateISBN();
-        
-        // Handle checkbox (if not checked, it won't be in request)
-        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_featured'] = $request->has('is_featured');
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image'] = $request->file('cover_image')
@@ -116,6 +118,7 @@ class BookController extends Controller
         }
 
         Book::create($validated);
+        $this->cacheService->invalidateCatalog();
 
         return redirect()->route('books.index')
             ->with('success', 'Book added successfully!');
@@ -148,11 +151,12 @@ class BookController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|image|max:2048',
+            'cover_image_url' => 'nullable|url|max:2048',
             'is_featured' => 'nullable|boolean',
+            'format' => 'nullable|string|in:hardcover,paperback,ebook,audiobook',
         ]);
 
-        // Handle checkbox (if not checked, it won't be in request)
-        $validated['is_featured'] = $request->has('is_featured') ? true : false;
+        $validated['is_featured'] = $request->has('is_featured');
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image'] = $request->file('cover_image')
@@ -178,10 +182,9 @@ class BookController extends Controller
     private function generateISBN()
     {
         do {
-            // Generate ISBN-13 format: 978-X-XXXX-XXXX-X
-            $isbn = '978-' . rand(0, 9) . '-' . 
-                    str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' . 
-                    str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' . 
+            $isbn = '978-' . rand(0, 9) . '-' .
+                    str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' .
+                    str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' .
                     rand(0, 9);
         } while (Book::where('isbn', $isbn)->exists());
 

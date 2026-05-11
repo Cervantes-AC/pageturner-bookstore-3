@@ -3,107 +3,36 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\BookResource;
 use App\Models\Book;
+use App\Repositories\BookRepository;
 use Illuminate\Http\Request;
 
 class BookApiController extends Controller
 {
+    public function __construct(
+        private readonly BookRepository $bookRepository,
+    ) {}
+
     public function index(Request $request)
     {
-        $query = Book::with('category');
+        $perPage = min((int) $request->input('per_page', 20), 100);
 
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-        if ($request->filled('search')) {
-            $q = $request->search;
-            $query->where(function ($w) use ($q) {
-                $w->where('title', 'like', "%{$q}%")
-                  ->orWhere('author', 'like', "%{$q}%")
-                  ->orWhere('isbn', 'like', "%{$q}%");
-            });
-        }
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-        if ($request->boolean('in_stock')) {
-            $query->where('stock_quantity', '>', 0);
-        }
-
-        // Cursor-based pagination (Section 4.4.2)
-        $perPage = min((int) $request->input('per_page', 20), 100);
-        $cursor  = $request->input('cursor');
-
-        if ($cursor) {
-            $books = $query->where('id', '>', $cursor)
-                ->orderBy('id')
-                ->take($perPage)
-                ->get();
+            $books = $this->bookRepository->findByCategory((int) $request->category_id, $perPage);
+        } elseif ($request->filled('search')) {
+            $books = $this->bookRepository->search($request->search, $perPage);
         } else {
-            $books = $query->orderBy('id')
-                ->take($perPage)
-                ->get();
+            $books = $this->bookRepository->getActiveCatalog($perPage);
         }
 
-        $nextCursor = $books->count() === $perPage ? $books->last()->id : null;
-
-        return response()->json([
-            'data' => $books->map(fn($b) => [
-                'id'            => $b->id,
-                'isbn'          => $b->isbn,
-                'title'         => $b->title,
-                'author'        => $b->author,
-                'price'         => (float) $b->price,
-                'stock'         => $b->stock_quantity,
-                'description'   => $b->description,
-                'category_id'   => $b->category_id,
-                'category_name' => $b->category?->name,
-                'cover_image'   => $b->cover_image,
-                'is_featured'   => $b->is_featured,
-                'avg_rating'    => $b->average_rating,
-                'created_at'    => $b->created_at?->toIso8601String(),
-            ]),
-            'meta' => [
-                'per_page'    => $perPage,
-                'next_cursor' => $nextCursor,
-                'has_more'    => $nextCursor !== null,
-            ],
-        ])->setEtag(md5(json_encode([$books->pluck('id')->toArray(), $books->count()])));
+        return BookResource::collection($books);
     }
 
     public function show(Book $book)
     {
         $book->load(['category', 'reviews.user']);
-
-        return response()->json([
-            'data' => [
-                'id'            => $book->id,
-                'isbn'          => $book->isbn,
-                'title'         => $book->title,
-                'author'        => $book->author,
-                'publication_year' => $book->publication_year,
-                'price'         => (float) $book->price,
-                'stock'         => $book->stock_quantity,
-                'description'   => $book->description,
-                'category_id'   => $book->category_id,
-                'category_name' => $book->category?->name,
-                'cover_image'   => $book->cover_image,
-                'is_featured'   => $book->is_featured,
-                'avg_rating'    => $book->average_rating,
-                'reviews'       => $book->reviews->map(fn($r) => [
-                    'id'        => $r->id,
-                    'user'      => $r->user?->name,
-                    'rating'    => $r->rating,
-                    'comment'   => $r->comment,
-                    'created_at'=> $r->created_at?->toIso8601String(),
-                ]),
-                'created_at'    => $book->created_at?->toIso8601String(),
-                'updated_at'    => $book->updated_at?->toIso8601String(),
-            ],
-        ]);
+        return new BookResource($book);
     }
 
     public function store(Request $request)
@@ -118,11 +47,12 @@ class BookApiController extends Controller
             'price'       => 'required|numeric|min:0|max:9999.99',
             'stock'       => 'required|integer|min:0',
             'description' => 'nullable|string',
+            'format'      => 'nullable|string|in:hardcover,paperback,ebook,audiobook',
         ]);
 
         $book = Book::create($validated);
 
-        return response()->json(['data' => $book, 'message' => 'Book created'], 201);
+        return response()->json(['data' => new BookResource($book), 'message' => 'Book created'], 201);
     }
 
     public function update(Request $request, Book $book)
@@ -137,11 +67,12 @@ class BookApiController extends Controller
             'price'       => 'numeric|min:0|max:9999.99',
             'stock'       => 'integer|min:0',
             'description' => 'nullable|string',
+            'format'      => 'nullable|string|in:hardcover,paperback,ebook,audiobook',
         ]);
 
         $book->update($validated);
 
-        return response()->json(['data' => $book->fresh(), 'message' => 'Book updated']);
+        return response()->json(['data' => new BookResource($book->fresh()), 'message' => 'Book updated']);
     }
 
     public function destroy(Book $book)

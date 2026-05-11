@@ -16,7 +16,7 @@
         <div>
             <x-input-label for="update_password_current_password" :value="__('Current Password')" />
             <div x-data="{ show: false }" class="relative">
-                <x-text-input id="update_password_current_password" name="current_password" :type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="current-password" />
+                <x-text-input id="update_password_current_password" name="current_password" x-bind:type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="current-password" />
                 <button type="button" @click="show = !show"
                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@
         <div>
             <x-input-label for="update_password_password" :value="__('New Password')" />
             <div x-data="{ show: false }" class="relative">
-                <x-text-input id="update_password_password" name="password" :type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="new-password" />
+                <x-text-input id="update_password_password" name="password" x-bind:type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="new-password" />
                 <button type="button" @click="show = !show"
                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@
         <div>
             <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
             <div x-data="{ show: false }" class="relative">
-                <x-text-input id="update_password_password_confirmation" name="password_confirmation" :type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="new-password" />
+                <x-text-input id="update_password_password_confirmation" name="password_confirmation" x-bind:type="show ? 'text' : 'password'" class="mt-1 block w-full pr-10" autocomplete="new-password" />
                 <button type="button" @click="show = !show"
                         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,13 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Book;
+use App\Models\User;
+use App\Notifications\CriticalAuditEventNotification;
+use App\Observers\BookObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use OwenIt\Auditing\Models\Audit;
-use App\Models\User;
-use App\Notifications\CriticalAuditEventNotification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->configureAuditChecksums();
+        $this->registerModelObservers();
 
         // Configure mail transport to bypass SSL verification for local development
         if (config('mail.default') === 'smtp') {
@@ -43,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
         }
+    }
+
+    protected function registerModelObservers(): void
+    {
+        Book::observe(BookObserver::class);
     }
 
     protected function configureRateLimiting(): void
@@ -97,6 +105,27 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(60)->by('standard|' . $user->id),
                 Limit::perSecond(5)->by('standard-burst|' . $user->id),
             ];
+        });
+
+        // Search endpoint: 30 req/min, with Redis-backed tiered limits
+        RateLimiter::for('search', function (Request $request) {
+            $user = $request->user();
+            $tier = match (true) {
+                $user?->isAdmin() => 'admin',
+                $user?->role === 'premium' => 'premium',
+                $user !== null => 'standard',
+                default => 'public',
+            };
+
+            $limits = [
+                'public' => 30,
+                'standard' => 60,
+                'premium' => 300,
+                'admin' => 1000,
+            ];
+
+            return Limit::perMinute($limits[$tier])
+                ->by($request->user()?->id ?: $request->ip());
         });
     }
 

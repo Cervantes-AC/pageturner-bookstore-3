@@ -202,9 +202,13 @@ class DatabaseSeeder extends Seeder
                 'isbn' => $this->generateISBN(),
                 'price' => $book['price'],
                 'stock_quantity' => $book['stock'],
+                'format' => 'paperback',
+                'published_at' => $book['year'] . '-06-15',
                 'publication_year' => $book['year'],
                 'description' => 'A compelling read that has captivated readers worldwide. ' . $book['title'] . ' by ' . $book['author'] . ' is a must-have for any book collection.',
-                'is_featured' => false, // Will set featured books later
+                'cover_image_url' => 'https://picsum.photos/seed/' . md5($book['title']) . '/400/600',
+                'is_featured' => false,
+                'is_active' => true,
             ]);
         }
 
@@ -370,9 +374,9 @@ class DatabaseSeeder extends Seeder
         foreach ($allBooks as $book) {
             // Random number of reviews per book (3-15 for more reviews)
             $reviewCount = rand(3, 15);
-            
+
             $usedUsers = [];
-            
+
             for ($i = 0; $i < $reviewCount; $i++) {
                 // Weighted random rating (more 4-5 stars, fewer 1-2 stars)
                 $rand = rand(1, 100);
@@ -396,7 +400,7 @@ class DatabaseSeeder extends Seeder
                 if ($availableUsers->isEmpty()) {
                     break; // No more unique users available
                 }
-                
+
                 $user = $availableUsers->random();
                 $usedUsers[] = $user->id;
 
@@ -447,18 +451,16 @@ class DatabaseSeeder extends Seeder
 
         // Create 30-50 orders
         $orderCount = rand(30, 50);
-        
+
         for ($i = 0; $i < $orderCount; $i++) {
             $user = $allUsers->random();
             $orderDate = now()->subDays(rand(1, 120));
-            
+
             // Determine status based on order age (older orders more likely to be completed)
             $daysAgo = $orderDate->diffInDays(now());
             if ($daysAgo > 60) {
-                // Old orders: mostly completed or cancelled
                 $status = rand(1, 100) <= 85 ? 'completed' : 'cancelled';
             } elseif ($daysAgo > 30) {
-                // Medium age: mix of completed, processing, and some cancelled
                 $rand = rand(1, 100);
                 if ($rand <= 70) {
                     $status = 'completed';
@@ -468,17 +470,15 @@ class DatabaseSeeder extends Seeder
                     $status = 'cancelled';
                 }
             } elseif ($daysAgo > 7) {
-                // Recent: mostly processing or completed
                 $status = rand(1, 100) <= 60 ? 'completed' : 'processing';
             } else {
-                // Very recent: pending or processing
                 $status = rand(1, 100) <= 50 ? 'pending' : 'processing';
             }
 
             // Create order
             $order = Order::create([
                 'user_id' => $user->id,
-                'total_amount' => 0, // Will calculate after adding items
+                'total_amount' => 0,
                 'status' => $status,
                 'shipping_name' => $user->name,
                 'shipping_phone' => $phoneNumbers[array_rand($phoneNumbers)],
@@ -493,7 +493,6 @@ class DatabaseSeeder extends Seeder
             $orderedBooks = [];
 
             for ($j = 0; $j < $itemCount; $j++) {
-                // Get a book that hasn't been added to this order yet
                 $book = $allBooks->whereNotIn('id', $orderedBooks)->random();
                 $orderedBooks[] = $book->id;
 
@@ -510,7 +509,6 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
 
-            // Update order total
             $order->update(['total_amount' => $totalAmount]);
         }
 
@@ -519,15 +517,15 @@ class DatabaseSeeder extends Seeder
         $this->command->info('✓ Admin: aaronclydeccervantes@gmail.com / password');
         $this->command->info('✓ Customer: customer@gmail.com / password');
 
-        // Lab 6 data
+        // Lab 6 seeder
         $this->call(Lab6Seeder::class);
     }
 
     private function generateISBN()
     {
-        return '978-' . rand(0, 9) . '-' . 
-               str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' . 
-               str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' . 
+        return '978-' . rand(0, 9) . '-' .
+               str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' .
+               str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT) . '-' .
                rand(0, 9);
     }
 }

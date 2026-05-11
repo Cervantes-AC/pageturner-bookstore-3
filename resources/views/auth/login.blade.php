@@ -12,7 +12,7 @@
         <div>
             <label for="email" class="input-label">Email address</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}"
-                   class="input-field @error('email') border-red-400 @enderror"
+                   class="input-field @error('email') input-field-error @enderror"
                    placeholder="you@example.com" required autofocus autocomplete="username"/>
             @error('email')<p class="input-error">{{ $message }}</p>@enderror
         </div>
@@ -21,17 +21,17 @@
             <div class="flex items-center justify-between mb-1.5">
                 <label for="password" class="input-label mb-0">Password</label>
                 @if(Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                    <a href="{{ route('password.request') }}" class="text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors">
                         Forgot password?
                     </a>
                 @endif
             </div>
             <div x-data="{ show: false }" class="relative">
-                <input id="password" :type="show ? 'text' : 'password'" name="password"
-                       class="input-field pr-10 @error('password') border-red-400 @enderror"
+                <input id="password" x-bind:type="show ? 'text' : 'password'" name="password"
+                       class="input-field pr-10 @error('password') input-field-error @enderror"
                        placeholder="••••••••" required autocomplete="current-password"/>
                 <button type="button" @click="show = !show"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -50,13 +50,13 @@
             <label for="remember_me" class="text-sm text-gray-600">Keep me signed in</label>
         </div>
 
-        <button type="submit" class="btn-primary w-full btn-lg">
+        <button type="submit" class="btn-primary w-full btn-lg shadow-sm">
             Sign In
         </button>
 
         <p class="text-center text-sm text-gray-500">
             Don't have an account?
-            <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-700 font-semibold">Create one</a>
+            <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-700 font-semibold transition-colors">Create one</a>
         </p>
     </form>
 </x-guest-layout>

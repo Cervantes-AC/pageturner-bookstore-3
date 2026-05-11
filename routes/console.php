@@ -110,6 +110,16 @@ Schedule::command('audit:archive')
     })
     ->onFailure(function () { Log::error('audit:archive FAILED.'); });
 
+// ── Materialized View Refresh (Hourly) ──────────────────────
+Schedule::command('app:refresh-materialized-views')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onSuccess(function () {
+        Log::info('Materialized views refreshed.');
+        trackTask('app:refresh-materialized-views', 'hourly', fn() => null);
+    })
+    ->onFailure(function () { Log::error('app:refresh-materialized-views FAILED.'); });
+
 // ── Session Cleanup (daily) ──────────────────────────────────
 Schedule::command('session:cleanup')
     ->daily()

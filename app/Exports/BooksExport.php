@@ -22,7 +22,15 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
 
     public function query()
     {
-        $query = Book::with('category');
+        $query = Book::query()
+            ->select([
+                'isbn', 'title', 'author', 'publisher', 'price',
+                'stock_quantity', 'published_at', 'format',
+                'category_id', 'description', 'is_featured', 'created_at',
+            ])
+            ->with('category:id,name')
+            ->where('is_active', true)
+            ->orderBy('id');
 
         if (!empty($this->filters['category_id'])) {
             $query->where('category_id', $this->filters['category_id']);
@@ -52,8 +60,11 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
             'isbn'        => 'ISBN',
             'title'       => 'Title',
             'author'      => 'Author',
+            'publisher'   => 'Publisher',
             'price'       => 'Price',
             'stock'       => 'Stock',
+            'format'      => 'Format',
+            'published_at'=> 'Published',
             'category'    => 'Category',
             'description' => 'Description',
             'featured'    => 'Featured',
@@ -69,8 +80,11 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
             'isbn'        => $book->isbn,
             'title'       => $book->title,
             'author'      => $book->author,
+            'publisher'   => $book->publisher,
             'price'       => $book->price,
             'stock'       => $book->stock_quantity,
+            'format'      => $book->format,
+            'published_at'=> $book->published_at?->format('Y-m-d'),
             'category'    => $book->category?->name,
             'description' => $book->description,
             'featured'    => $book->is_featured ? 'Yes' : 'No',
@@ -82,6 +96,6 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 2000;
     }
 }

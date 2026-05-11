@@ -10,7 +10,7 @@
         <div>
             <label for="name" class="input-label">Full name</label>
             <input id="name" type="text" name="name" value="{{ old('name') }}"
-                   class="input-field @error('name') border-red-400 @enderror"
+                   class="input-field @error('name') input-field-error @enderror"
                    placeholder="John Doe" required autofocus autocomplete="name"/>
             @error('name')<p class="input-error">{{ $message }}</p>@enderror
         </div>
@@ -18,7 +18,7 @@
         <div>
             <label for="email" class="input-label">Email address</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}"
-                   class="input-field @error('email') border-red-400 @enderror"
+                   class="input-field @error('email') input-field-error @enderror"
                    placeholder="you@example.com" required autocomplete="username"/>
             @error('email')<p class="input-error">{{ $message }}</p>@enderror
         </div>
@@ -26,11 +26,11 @@
         <div>
             <label for="password" class="input-label">Password</label>
             <div x-data="{ show: false }" class="relative">
-                <input id="password" :type="show ? 'text' : 'password'" name="password"
-                       class="input-field pr-10 @error('password') border-red-400 @enderror"
+                <input id="password" x-bind:type="show ? 'text' : 'password'" name="password"
+                       class="input-field pr-10 @error('password') input-field-error @enderror"
                        placeholder="Min. 8 characters" required autocomplete="new-password"/>
                 <button type="button" @click="show = !show"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -46,10 +46,10 @@
         <div>
             <label for="password_confirmation" class="input-label">Confirm password</label>
             <div x-data="{ show: false }" class="relative">
-                <input id="password_confirmation" :type="show ? 'text' : 'password'" name="password_confirmation"
+                <input id="password_confirmation" x-bind:type="show ? 'text' : 'password'" name="password_confirmation"
                        class="input-field pr-10" placeholder="••••••••" required autocomplete="new-password"/>
                 <button type="button" @click="show = !show"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
                     <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -61,13 +61,13 @@
             </div>
         </div>
 
-        <button type="submit" class="btn-primary w-full btn-lg">
+        <button type="submit" class="btn-primary w-full btn-lg shadow-sm">
             Create Account
         </button>
 
         <p class="text-center text-sm text-gray-500">
             Already have an account?
-            <a href="{{ route('login') }}" class="text-primary-600 hover:text-primary-700 font-semibold">Sign in</a>
+            <a href="{{ route('login') }}" class="text-primary-600 hover:text-primary-700 font-semibold transition-colors">Sign in</a>
         </p>
     </form>
 </x-guest-layout>
