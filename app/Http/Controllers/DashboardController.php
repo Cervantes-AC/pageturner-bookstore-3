@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiRateLimit;
 use App\Models\BackupMonitoring;
 use App\Models\Book;
 use App\Models\Category;
@@ -9,6 +10,7 @@ use App\Models\ExportLog;
 use App\Models\ImportLog;
 use App\Models\Order;
 use App\Models\Review;
+use App\Models\ScheduledTask;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +44,17 @@ class DashboardController extends Controller
         $lastBackup      = BackupMonitoring::where('status', 'success')->latest()->first();
         $recentAuditLogs = Audit::with('user')->latest()->take(5)->get();
 
+        // API Usage Statistics
+        $apiStats = [
+            'total_requests'     => ApiRateLimit::count(),
+            'throttled_requests' => ApiRateLimit::where('throttled', true)->count(),
+            'requests_today'     => ApiRateLimit::whereDate('created_at', today())->count(),
+            'throttled_today'    => ApiRateLimit::whereDate('created_at', today())->where('throttled', true)->count(),
+            'by_tier'            => ApiRateLimit::selectRaw('tier, COUNT(*) as count')
+                                     ->groupBy('tier')->pluck('count', 'tier')->toArray(),
+        ];
+
+        // System Health
         $dbSizeBytes = 0;
         try {
             $dbPath = database_path('database.sqlite');
@@ -50,13 +63,30 @@ class DashboardController extends Controller
             }
         } catch (\Exception $e) {}
 
-        $failedJobs = DB::table('jobs')->count();
+        $failedJobs    = DB::table('failed_jobs')->count();
+        $queueSize     = DB::table('jobs')->count();
+        $storageUsage  = 0;
+        try {
+            $storagePath = storage_path('app');
+            if (is_dir($storagePath)) {
+                $size = 0;
+                foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($storagePath)) as $file) {
+                    if ($file->isFile()) $size += $file->getSize();
+                }
+                $storageUsage = $size;
+            }
+        } catch (\Exception $e) {}
+
+        $recentScheduledTasks = ScheduledTask::latest()->take(5)->get();
+        $failedScheduledTasks = ScheduledTask::where('status', 'failed')->count();
 
         return view('dashboard.admin', compact(
             'totalUsers', 'totalBooks', 'totalCategories', 'totalOrders',
             'recentOrders', 'orderStatusSummary', 'recentReviews',
             'recentImports', 'recentExports', 'lastBackup',
-            'recentAuditLogs', 'dbSizeBytes', 'failedJobs'
+            'recentAuditLogs', 'dbSizeBytes', 'failedJobs',
+            'apiStats', 'queueSize', 'storageUsage',
+            'recentScheduledTasks', 'failedScheduledTasks'
         ));
     }
 

@@ -156,6 +156,7 @@
                     <select name="format" class="input-field text-xs py-1.5 w-20">
                         <option value="xlsx">XLSX</option>
                         <option value="csv">CSV</option>
+                        <option value="pdf">PDF</option>
                     </select>
                     <button type="submit" class="btn-secondary btn-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,6 +165,24 @@
                         Orders
                     </button>
                 </form>
+            </div>
+        </div>
+
+        {{-- Reading History --}}
+        <div class="card p-5 lg:col-span-2">
+            <h3 class="text-sm font-semibold text-gray-900 mb-1">Reading & Browsing History</h3>
+            <p class="text-xs text-gray-500 mb-4">Export your reading history, including books you've purchased and reviewed.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs text-gray-500 mb-1">Books Purchased</p>
+                    <p class="text-lg font-bold text-gray-900">
+                        {{ $totalOrders > 0 ? \App\Models\OrderItem::whereIn('order_id', auth()->user()->orders()->pluck('id'))->count() : 0 }}
+                    </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs text-gray-500 mb-1">Reviews Written</p>
+                    <p class="text-lg font-bold text-gray-900">{{ auth()->user()->reviews()->count() }}</p>
+                </div>
             </div>
         </div>
     </div>

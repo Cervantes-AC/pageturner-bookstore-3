@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\ApiRateLimit;
 use App\Models\BackupMonitoring;
 use App\Models\ExportLog;
 use App\Models\ImportLog;
+use App\Models\ScheduledTask;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  *   - Export logs (simulating past exports)
  *   - Backup monitoring records
  *   - Mock audit log entries
+ *   - Scheduled task execution records
+ *   - API rate limit tracking records
  */
 class Lab6Seeder extends Seeder
 {
@@ -138,7 +142,7 @@ class Lab6Seeder extends Seeder
                 'name'         => config('app.name', 'PageTurner'),
                 'status'       => 'success',
                 'disk'         => 'local',
-                'size'         => 5242880, // 5 MB
+                'size'         => 5242880,
                 'path'         => 'PageTurner/2026-04-20-02-00-00.zip',
                 'message'      => 'Backup completed successfully.',
                 'completed_at' => now()->subDays(7),
@@ -160,7 +164,7 @@ class Lab6Seeder extends Seeder
                 'name'         => config('app.name', 'PageTurner'),
                 'status'       => 'success',
                 'disk'         => 'local',
-                'size'         => 5505024, // ~5.25 MB
+                'size'         => 5505024,
                 'path'         => 'PageTurner/2026-04-21-02-00-00.zip',
                 'message'      => 'Backup completed successfully.',
                 'completed_at' => now()->subDays(1),
@@ -175,8 +179,36 @@ class Lab6Seeder extends Seeder
 
         $this->command->info('✓ Seeded ' . count($backupRecords) . ' backup monitoring records');
 
+        // ── Scheduled Tasks ───────────────────────────────────────────────────
+        $scheduledTasks = [
+            ['command' => 'backup:run',          'frequency' => 'daily',   'status' => 'success', 'duration' => 12.34, 'started_at' => now()->subHours(6),  'finished_at' => now()->subHours(6)->addSeconds(12)],
+            ['command' => 'backup:clean',        'frequency' => 'daily',   'status' => 'success', 'duration' => 3.21,  'started_at' => now()->subHours(5),  'finished_at' => now()->subHours(5)->addSeconds(3)],
+            ['command' => 'order:cleanup-pending','frequency' => 'hourly', 'status' => 'success', 'duration' => 0.45,  'started_at' => now()->subHour(),    'finished_at' => now()->subHour()->addSeconds(1)],
+            ['command' => 'report:generate-daily','frequency' => 'daily',  'status' => 'success', 'duration' => 5.67,  'started_at' => now()->subHours(4),  'finished_at' => now()->subHours(4)->addSeconds(6)],
+            ['command' => 'log:rotate',          'frequency' => 'weekly',  'status' => 'failed',  'duration' => 0.00,  'started_at' => now()->subDays(3),   'finished_at' => now()->subDays(3)->addSeconds(2), 'output' => 'Insufficient disk space'],
+        ];
+
+        foreach ($scheduledTasks as $task) {
+            ScheduledTask::create($task);
+        }
+
+        $this->command->info('✓ Seeded ' . count($scheduledTasks) . ' scheduled task records');
+
+        // ── API Rate Limits ───────────────────────────────────────────────────
+        $apiLimits = [
+            ['key' => '192.168.1.50',             'endpoint' => 'api/books',      'tier' => 'public',   'hit_count' => 5,  'window_start' => now()->subHour()],
+            ['key' => 'standard|' . ($customer?->id ?? 0), 'endpoint' => 'api/orders',    'tier' => 'standard','hit_count' => 12, 'window_start' => now()->subHour()],
+            ['key' => 'admin|' . $admin->id,      'endpoint' => 'api/admin/books','tier' => 'admin',    'hit_count' => 3,  'window_start' => now()->subHour()],
+            ['key' => '10.0.0.99',                'endpoint' => 'api/books',      'tier' => 'public',   'hit_count' => 35, 'window_start' => now()->subMinutes(30)],
+        ];
+
+        foreach ($apiLimits as $limit) {
+            ApiRateLimit::create($limit);
+        }
+
+        $this->command->info('✓ Seeded ' . count($apiLimits) . ' API rate limit records');
+
         // ── Mock Audit Logs ───────────────────────────────────────────────────
-        // Simulate audit entries for various models and events
         $auditEntries = [
             [
                 'user_type'      => 'App\\Models\\User',

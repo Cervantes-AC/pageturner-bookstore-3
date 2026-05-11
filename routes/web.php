@@ -95,7 +95,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // ── Data Portability (Customer) ───────────────────────────
-    Route::get('/export/my-orders', [ImportExportController::class, 'exportMyOrders'])->name('export.my-orders');
+    Route::match(['get', 'post'], '/export/my-orders', [ImportExportController::class, 'exportMyOrders'])->name('export.my-orders');
     Route::get('/export/my-data', [ImportExportController::class, 'exportMyData'])->name('export.my-data');
 });
 

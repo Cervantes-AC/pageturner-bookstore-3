@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ApiRateLimit;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,9 @@ class ApiTransformMiddleware
             }
 
             $response->setData($data);
+
+            // ETag support for conditional requests (Section 4.4.2)
+            $this->applyEtag($request, $response);
         }
 
         return $response;
@@ -37,6 +41,7 @@ class ApiTransformMiddleware
 
     /**
      * Attach X-RateLimit-Limit, X-RateLimit-Remaining, and Retry-After headers.
+     * Also log rate limit hits to the api_rate_limits table.
      */
     private function addRateLimitHeaders(Request $request, Response $response): void
     {
@@ -60,15 +65,36 @@ class ApiTransformMiddleware
             ? ($user->isAdmin() ? 'admin|' . $user->id : 'standard|' . $user->id)
             : $request->ip();
 
-        $attempts   = \Illuminate\Support\Facades\RateLimiter::attempts($limiterName . '|' . $key);
+        $attempts   = RateLimiter::attempts($limiterName . '|' . $key);
         $remaining  = max(0, $limit - $attempts);
 
         $response->headers->set('X-RateLimit-Limit', $limit);
         $response->headers->set('X-RateLimit-Remaining', $remaining);
 
-        if ($response->getStatusCode() === 429) {
-            $retryAfter = \Illuminate\Support\Facades\RateLimiter::availableIn($limiterName . '|' . $key);
+        $throttled = $response->getStatusCode() === 429;
+
+        if ($throttled) {
+            $retryAfter = RateLimiter::availableIn($limiterName . '|' . $key);
             $response->headers->set('Retry-After', $retryAfter);
+        }
+
+        // Log to api_rate_limits table (sampled to avoid overwhelming the DB)
+        if (mt_rand(1, 10) === 1 || $throttled) {
+            try {
+                ApiRateLimit::create([
+                    'user_id'    => $user?->id,
+                    'ip_address' => $request->ip(),
+                    'tier'       => $limiterName === 'api' ? ($user ? ($user->isAdmin() ? 'admin' : ($user->role === 'premium' ? 'premium' : 'standard')) : 'public') : $limiterName,
+                    'endpoint'   => $request->path(),
+                    'method'     => $request->method(),
+                    'attempts'   => $attempts,
+                    'limit'      => $limit,
+                    'throttled'  => $throttled,
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Exception $e) {
+                // Don't let logging failure break the request
+            }
         }
     }
 
@@ -88,5 +114,34 @@ class ApiTransformMiddleware
             return array_map(fn($item) => array_intersect_key($item, array_flip($fields)), $data);
         }
         return array_intersect_key($data, array_flip($fields));
+    }
+
+    /**
+     * Apply ETag support for conditional requests.
+     * If the response already has an ETag (set by the controller), use it;
+     * otherwise generate one from the response content.
+     * Respond with 304 Not Modified if the ETag matches.
+     */
+    private function applyEtag(Request $request, JsonResponse $response): void
+    {
+        if (!$response->headers->has('ETag')) {
+            $content = $response->getContent();
+            if ($content) {
+                $response->setEtag(md5($content));
+            }
+        }
+
+        $etag = $response->headers->get('ETag');
+        if (!$etag) return;
+
+        $requestEtag = $request->header('If-None-Match');
+
+        // Handle weak and strong comparison
+        $requestEtag = trim((string) $requestEtag, '"');
+
+        if ($requestEtag === trim($etag, '"') || $requestEtag === 'W/"' . trim($etag, '"') . '"') {
+            $response->setStatusCode(304);
+            $response->setContent(null);
+        }
     }
 }

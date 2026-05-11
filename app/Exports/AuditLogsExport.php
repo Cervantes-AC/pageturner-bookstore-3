@@ -5,12 +5,18 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use OwenIt\Auditing\Models\Audit;
 
-class AuditLogsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class AuditLogsExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldAutoSize
 {
-    public function __construct(protected array $filters = []) {}
+    protected array $filters;
+
+    public function __construct(array $filters = [])
+    {
+        $this->filters = $filters;
+    }
 
     public function query()
     {
@@ -34,7 +40,7 @@ class AuditLogsExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
 
     public function headings(): array
     {
-        return ['ID', 'User', 'Event', 'Model', 'Model ID', 'Old Values', 'New Values', 'IP Address', 'Date'];
+        return ['ID', 'User', 'Event', 'Auditable Type', 'Auditable ID', 'IP Address', 'URL', 'Timestamp'];
     }
 
     public function map($audit): array
@@ -42,13 +48,17 @@ class AuditLogsExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
         return [
             $audit->id,
             $audit->user?->name ?? 'System',
-            ucfirst($audit->event),
-            class_basename($audit->auditable_type),
+            $audit->event,
+            class_basename($audit->auditable_type ?? ''),
             $audit->auditable_id,
-            json_encode($audit->old_values),
-            json_encode($audit->new_values),
             $audit->ip_address,
+            $audit->url,
             $audit->created_at?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }

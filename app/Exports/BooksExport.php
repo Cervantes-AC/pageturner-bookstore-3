@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldAutoSize
 {
     protected array $filters;
     protected array $columns;
@@ -78,5 +78,10 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSiz
         ];
 
         return array_values(array_intersect_key($all, array_flip($this->columns)));
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }

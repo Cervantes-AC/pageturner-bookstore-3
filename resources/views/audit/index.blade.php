@@ -20,7 +20,12 @@
 
     <!-- Filters -->
     <form method="GET" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div class="md:col-span-2">
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Search events, models, URLs, IPs..."
+                       class="w-full rounded border-gray-300 text-sm">
+            </div>
             <select name="user_id" class="rounded border-gray-300 text-sm">
                 <option value="">All Users</option>
                 @foreach($users as $u)
@@ -29,18 +34,16 @@
             </select>
             <select name="event" class="rounded border-gray-300 text-sm">
                 <option value="">All Events</option>
-                <option value="created" {{ request('event') === 'created' ? 'selected' : '' }}>Created</option>
-                <option value="updated" {{ request('event') === 'updated' ? 'selected' : '' }}>Updated</option>
-                <option value="deleted" {{ request('event') === 'deleted' ? 'selected' : '' }}>Deleted</option>
+                @foreach($events as $evt)
+                    <option value="{{ $evt }}" {{ request('event') === $evt ? 'selected' : '' }}>{{ ucfirst($evt) }}</option>
+                @endforeach
             </select>
-            <input type="text" name="auditable_type" value="{{ request('auditable_type') }}"
-                   placeholder="Model (e.g. Book)" class="rounded border-gray-300 text-sm">
             <div class="flex flex-col gap-1">
-                <label class="text-xs text-gray-500 font-medium">Date From</label>
+                <label class="text-xs text-gray-500 font-medium">From</label>
                 <input type="date" name="date_from" value="{{ request('date_from') }}" class="rounded border-gray-300 text-sm">
             </div>
             <div class="flex flex-col gap-1">
-                <label class="text-xs text-gray-500 font-medium">Date To</label>
+                <label class="text-xs text-gray-500 font-medium">To</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded border-gray-300 text-sm">
             </div>
         </div>

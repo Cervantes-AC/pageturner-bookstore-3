@@ -64,6 +64,7 @@
                         <select name="format" class="block w-full rounded border-gray-300 text-sm">
                             <option value="xlsx">XLSX</option>
                             <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
                         </select>
                     </div>
                     <div>

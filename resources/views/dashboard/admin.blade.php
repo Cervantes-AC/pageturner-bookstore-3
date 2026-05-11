@@ -201,12 +201,46 @@
         </div>
     </div>
 
+    {{-- API Usage Statistics --}}
+    <div class="card mb-6">
+        <div class="card-header">
+            <h2 class="section-title">API Usage Statistics</h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+            <div class="p-5">
+                <p class="text-xs text-gray-500 font-medium mb-1">Total Requests</p>
+                <p class="text-lg font-bold text-gray-900">{{ number_format($apiStats['total_requests']) }}</p>
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-gray-500 font-medium mb-1">Today</p>
+                <p class="text-lg font-bold text-gray-900">{{ number_format($apiStats['requests_today']) }}</p>
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-gray-500 font-medium mb-1">Throttled (Today)</p>
+                <p class="text-lg font-bold {{ $apiStats['throttled_today'] > 0 ? 'text-red-600' : 'text-gray-900' }}">
+                    {{ number_format($apiStats['throttled_today']) }}
+                </p>
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-gray-500 font-medium mb-1">Queue Size</p>
+                <p class="text-lg font-bold {{ $queueSize > 0 ? 'text-amber-600' : 'text-gray-900' }}">{{ number_format($queueSize) }}</p>
+            </div>
+        </div>
+        @if(!empty($apiStats['by_tier']))
+        <div class="px-5 pb-4 flex flex-wrap gap-3 text-xs text-gray-500">
+            @foreach($apiStats['by_tier'] as $tier => $count)
+            <span class="px-2 py-1 bg-gray-50 rounded">{{ ucfirst($tier) }}: {{ number_format($count) }}</span>
+            @endforeach
+        </div>
+        @endif
+    </div>
+
     {{-- System Health --}}
-    <div class="card">
+    <div class="card mb-6">
         <div class="card-header">
             <h2 class="section-title">System Health</h2>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+        <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-gray-100">
             <div class="p-5">
                 <p class="text-xs text-gray-500 font-medium mb-1">Database Size</p>
                 <p class="text-lg font-bold text-gray-900">
@@ -214,12 +248,16 @@
                 </p>
             </div>
             <div class="p-5">
-                <p class="text-xs text-gray-500 font-medium mb-1">Pending Jobs</p>
-                <p class="text-lg font-bold {{ $failedJobs > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $failedJobs }}</p>
+                <p class="text-xs text-gray-500 font-medium mb-1">Failed Jobs</p>
+                <p class="text-lg font-bold {{ $failedJobs > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($failedJobs) }}</p>
             </div>
             <div class="p-5">
-                <p class="text-xs text-gray-500 font-medium mb-1">Total Books</p>
-                <p class="text-lg font-bold text-gray-900">{{ number_format($totalBooks) }}</p>
+                <p class="text-xs text-gray-500 font-medium mb-1">Storage Used</p>
+                <p class="text-lg font-bold text-gray-900">{{ $storageUsage > 0 ? round($storageUsage / 1024 / 1024, 2) . ' MB' : 'N/A' }}</p>
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-gray-500 font-medium mb-1">Scheduled Fails</p>
+                <p class="text-lg font-bold {{ $failedScheduledTasks > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($failedScheduledTasks) }}</p>
             </div>
             <div class="p-5">
                 <p class="text-xs text-gray-500 font-medium mb-1">Total Orders</p>
@@ -227,6 +265,36 @@
             </div>
         </div>
     </div>
+
+    {{-- Scheduled Tasks --}}
+    @if($recentScheduledTasks->count() > 0)
+    <div class="card">
+        <div class="card-header">
+            <h2 class="section-title">Recent Scheduled Tasks</h2>
+        </div>
+        <div class="divide-y divide-gray-50">
+            @foreach($recentScheduledTasks as $task)
+            <div class="px-6 py-3 flex items-center justify-between text-xs">
+                <div>
+                    <span class="font-medium text-gray-900">{{ $task->command }}</span>
+                    <span class="text-gray-400 ml-1">{{ $task->frequency }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-1.5 py-0.5 rounded text-xs font-medium
+                        {{ $task->status === 'success' ? 'bg-green-100 text-green-800' : '' }}
+                        {{ $task->status === 'failed' ? 'bg-red-100 text-red-800' : '' }}
+                        {{ $task->status === 'running' ? 'bg-yellow-100 text-yellow-800' : '' }}">
+                        {{ ucfirst($task->status) }}
+                    </span>
+                    @if($task->duration)
+                    <span class="text-gray-400">{{ round($task->duration, 2) }}s</span>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
 </div>
 @endsection

@@ -6,9 +6,10 @@ use App\Models\Order;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
+class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldAutoSize
 {
     protected array $filters;
     protected ?int $userId;
@@ -56,5 +57,10 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             $order->shipping_name,
             $order->created_at?->format('Y-m-d H:i'),
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }

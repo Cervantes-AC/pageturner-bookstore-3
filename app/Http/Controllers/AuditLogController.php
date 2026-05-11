@@ -31,11 +31,21 @@ class AuditLogController extends Controller
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($w) use ($q) {
+                $w->where('event', 'like', "%{$q}%")
+                  ->orWhere('auditable_type', 'like', "%{$q}%")
+                  ->orWhere('url', 'like', "%{$q}%")
+                  ->orWhere('ip_address', 'like', "%{$q}%");
+            });
+        }
 
         $logs  = $query->paginate(25)->withQueryString();
         $users = \App\Models\User::orderBy('name')->get(['id', 'name']);
+        $events = ['created', 'updated', 'deleted', 'restored'];
 
-        return view('audit.index', compact('logs', 'users'));
+        return view('audit.index', compact('logs', 'users', 'events'));
     }
 
     public function show(Audit $audit)
@@ -60,7 +70,7 @@ class AuditLogController extends Controller
             if (!empty($filters['date_from']))  $query->whereDate('created_at', '>=', $filters['date_from']);
             if (!empty($filters['date_to']))    $query->whereDate('created_at', '<=', $filters['date_to']);
 
-            $logs = $query->take(500)->get(); // cap PDF at 500 rows
+            $logs = $query->take(500)->get();
 
             $pdf = Pdf::loadView('audit.export-pdf', compact('logs', 'filters'))
                 ->setPaper('a4', 'landscape');

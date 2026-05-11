@@ -9,6 +9,8 @@ use App\Imports\BooksImport;
 use App\Models\Book;
 use App\Models\ExportLog;
 use App\Models\ImportLog;
+use App\Models\Order;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -47,7 +49,7 @@ class ImportExportController extends Controller
 
             // Count rows from the spreadsheet
             $rowCount = Excel::toArray(new \App\Imports\BooksRowCounter(), $file)[0] ?? [];
-            $total    = max(0, count($rowCount) - 1); // minus header
+            $total    = max(0, count($rowCount) - 1);
 
             $log->update([
                 'status'         => 'completed',
@@ -59,7 +61,7 @@ class ImportExportController extends Controller
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
 
-        return back()->with('success', "Import completed. Check the log for details.");
+        return back()->with('success', 'Import completed. Check the log for details.');
     }
 
     public function downloadTemplate()
@@ -84,7 +86,8 @@ class ImportExportController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
         $logs = ExportLog::with('user')->latest()->take(20)->get();
-        return view('import-export.export', compact('logs'));
+        $orderFormats = ['xlsx', 'csv', 'pdf'];
+        return view('import-export.export', compact('logs', 'orderFormats'));
     }
 
     public function exportBooks(Request $request)
@@ -99,15 +102,34 @@ class ImportExportController extends Controller
         $filters = $request->only(['category_id', 'min_price', 'max_price', 'in_stock', 'date_from', 'date_to']);
         $columns = $request->input('columns', []);
 
+        $bookCount = Book::count();
+        $isLarge   = $bookCount > 10000;
+
         $log = ExportLog::create([
             'user_id' => auth()->id(),
             'type'    => 'books',
             'format'  => $request->format,
             'filters' => $filters,
-            'status'  => 'completed',
+            'status'  => $isLarge ? 'processing' : 'completed',
         ]);
 
         $filename = 'books_export_' . now()->format('Ymd_His') . '.' . $request->format;
+
+        if ($isLarge) {
+            dispatch(function () use ($log, $filters, $columns, $filename, $request) {
+                try {
+                    Excel::store(new BooksExport($filters, $columns), $filename, 'public');
+                    $log->update([
+                        'status'       => 'completed',
+                        'download_link' => '/storage/' . $filename,
+                    ]);
+                } catch (\Exception $e) {
+                    $log->update(['status' => 'failed']);
+                }
+            });
+
+            return back()->with('info', "Export queued for {$bookCount} records. You'll be notified when ready.");
+        }
 
         return Excel::download(new BooksExport($filters, $columns), $filename);
     }
@@ -116,9 +138,31 @@ class ImportExportController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $request->validate(['format' => 'required|in:xlsx,csv']);
+        $request->validate(['format' => 'required|in:xlsx,csv,pdf']);
 
         $filters = $request->only(['status', 'date_from', 'date_to']);
+
+        if ($request->format === 'pdf') {
+            $query = Order::with(['user', 'orderItems.book'])->latest();
+            if (!empty($filters['status']))    $query->where('status', $filters['status']);
+            if (!empty($filters['date_from'])) $query->whereDate('created_at', '>=', $filters['date_from']);
+            if (!empty($filters['date_to']))   $query->whereDate('created_at', '<=', $filters['date_to']);
+
+            $orders  = $query->take(500)->get();
+            $revenue = $orders->sum('total_amount');
+            $pdf     = Pdf::loadView('orders.export-pdf', compact('orders', 'filters', 'revenue'))
+                ->setPaper('a4', 'landscape');
+
+            ExportLog::create([
+                'user_id' => auth()->id(),
+                'type'    => 'orders',
+                'format'  => 'pdf',
+                'filters' => $filters,
+                'status'  => 'completed',
+            ]);
+
+            return $pdf->download('orders_export_' . now()->format('Ymd_His') . '.pdf');
+        }
 
         ExportLog::create([
             'user_id' => auth()->id(),
@@ -135,7 +179,7 @@ class ImportExportController extends Controller
 
     public function exportMyOrders(Request $request)
     {
-        $request->validate(['format' => 'required|in:xlsx,csv']);
+        $request->validate(['format' => 'required|in:xlsx,csv,pdf']);
 
         ExportLog::create([
             'user_id' => auth()->id(),
@@ -144,6 +188,15 @@ class ImportExportController extends Controller
             'filters' => [],
             'status'  => 'completed',
         ]);
+
+        if ($request->format === 'pdf') {
+            $orders  = auth()->user()->orders()->with('orderItems.book')->latest()->get();
+            $revenue = $orders->sum('total_amount');
+            $pdf     = Pdf::loadView('orders.export-pdf', compact('orders', 'revenue'))
+                ->setPaper('a4', 'portrait');
+
+            return $pdf->download('my_orders_' . now()->format('Ymd_His') . '.pdf');
+        }
 
         $filename = 'my_orders_' . now()->format('Ymd_His') . '.' . $request->format;
 
