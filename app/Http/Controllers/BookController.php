@@ -82,16 +82,12 @@ class BookController extends Controller
 
     public function create()
     {
-        $this->authorize('create', Book::class);
-
         $categories = Category::all();
         return view('books.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', Book::class);
-
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
@@ -101,14 +97,10 @@ class BookController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|image|max:2048',
-            'is_featured' => 'nullable|boolean',
         ]);
 
         // Auto-generate ISBN
         $validated['isbn'] = $this->generateISBN();
-        
-        // Handle checkbox (if not checked, it won't be in request)
-        $validated['is_featured'] = $request->has('is_featured') ? true : false;
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image'] = $request->file('cover_image')
@@ -129,16 +121,12 @@ class BookController extends Controller
 
     public function edit(Book $book)
     {
-        $this->authorize('update', $book);
-
         $categories = Category::all();
         return view('books.edit', compact('book', 'categories'));
     }
 
     public function update(Request $request, Book $book)
     {
-        $this->authorize('update', $book);
-
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
@@ -148,11 +136,7 @@ class BookController extends Controller
             'stock_quantity' => 'required|integer|min:0',
             'description' => 'nullable|string',
             'cover_image' => 'nullable|image|max:2048',
-            'is_featured' => 'nullable|boolean',
         ]);
-
-        // Handle checkbox (if not checked, it won't be in request)
-        $validated['is_featured'] = $request->has('is_featured') ? true : false;
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image'] = $request->file('cover_image')
@@ -167,8 +151,6 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
-        $this->authorize('delete', $book);
-
         $book->delete();
 
         return redirect()->route('books.index')

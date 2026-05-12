@@ -11,10 +11,6 @@
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.books.create') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">+ Add Book</a>
                             <a href="{{ route('admin.categories.create') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">+ Add Category</a>
-                            <a href="{{ route('admin.import.form') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">Import</a>
-                            <a href="{{ route('admin.export.form') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">Export</a>
-                            <a href="{{ route('admin.audit.index') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">Audit</a>
-                            <a href="{{ route('admin.backup.index') }}" class="hover:bg-indigo-700 px-3 py-2 rounded-md">Backup</a>
                         @endif
                     @endauth
                 </div>

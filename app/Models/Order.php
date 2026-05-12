@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
 
-class Order extends Model implements Auditable
+class Order extends Model
 {
-    use HasFactory, \OwenIt\Auditing\Auditable;
+    use HasFactory;
 
     protected $fillable = [
         'user_id',

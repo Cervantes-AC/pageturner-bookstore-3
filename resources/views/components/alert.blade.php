@@ -1,12 +1,23 @@
 @props(['type' => 'info'])
 @php
 $classes = [
-    'success' => 'bg-green-900/30 border-green-700/50 text-green-400',
-    'error'   => 'bg-red-900/30 border-red-700/50 text-red-400',
-    'warning' => 'bg-yellow-900/30 border-yellow-700/50 text-yellow-400',
-    'info'    => 'bg-blue-900/30 border-blue-700/50 text-blue-400',
+    'success' => 'bg-emerald-50 border-emerald-200 text-emerald-800',
+    'error'   => 'bg-red-50 border-red-200 text-red-800',
+    'warning' => 'bg-orange-50 border-orange-200 text-orange-800',
+    'info'    => 'bg-blue-50 border-blue-200 text-blue-800',
+];
+$icons = [
+    'success' => '<svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+    'error'   => '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+    'warning' => '<svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>',
+    'info'    => '<svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
 ];
 @endphp
-<div {{ $attributes->merge(['class' => 'border px-4 py-3 rounded-lg backdrop-blur-sm ' . ($classes[$type] ?? $classes['info'])]) }}>
-    {{ $slot }}
+<div {{ $attributes->merge(['class' => 'border px-6 py-4 rounded-xl flex items-start space-x-3 ' . ($classes[$type] ?? $classes['info'])]) }}>
+    <div class="flex-shrink-0">
+        {!! $icons[$type] ?? $icons['info'] !!}
+    </div>
+    <div class="flex-1">
+        {{ $slot }}
+    </div>
 </div>

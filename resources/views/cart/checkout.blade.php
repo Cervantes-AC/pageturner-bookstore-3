@@ -1,143 +1,146 @@
 @extends('layouts.app')
 @section('title', 'Checkout - PageTurner')
 
+@section('header')
+    <h1 class="text-4xl font-bold text-gray-900">Checkout</h1>
+    <p class="text-gray-600 mt-2">Complete your order</p>
+@endsection
+
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900">Checkout</h1>
-        <p class="text-gray-600 mt-2">Complete your order</p>
-    </div>
-
-    <!-- Security Notice -->
-    <div class="mb-6 bg-gradient-to-r from-blue-50 to-primary-50 border border-blue-200 rounded-xl p-5 animate-fade-in">
-        <div class="flex items-start gap-4">
-            <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-primary-600 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                    🔒 Secure Checkout with 2FA Verification
-                </h3>
-                <p class="text-sm text-gray-700">
-                    For your security, you'll need to verify your order with a code sent to your email 
-                    <span class="font-medium text-primary-600">{{ auth()->user()->email }}</span> 
-                    before completing the purchase.
-                </p>
-            </div>
-        </div>
-    </div>
-
+<div class="max-w-5xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2">
-            <div class="card p-8 animate-slide-up">
-                <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Shipping Information
-                </h2>
+            <div class="card">
+                <div class="p-6 border-b border-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-900">Shipping Information</h2>
+                </div>
 
-                <form action="{{ route('orders.store') }}" method="POST">
+                <form action="{{ route('orders.store') }}" method="POST" class="p-6">
                     @csrf
                     @foreach($items as $index => $item)
                         <input type="hidden" name="items[{{ $index }}][book_id]" value="{{ $item['book_id'] }}">
                         <input type="hidden" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
                     @endforeach
 
-                    <div class="space-y-5 mb-8">
+                    <div class="space-y-6 mb-8">
                         <div>
-                            <label for="shipping_name" class="block text-gray-700 font-medium mb-2">Full Name *</label>
+                            <label for="shipping_name" class="block text-gray-700 font-semibold mb-2">
+                                Full Name <span class="text-red-500">*</span>
+                            </label>
                             <input type="text" id="shipping_name" name="shipping_name" 
                                    value="{{ old('shipping_name', auth()->user()->name) }}" 
                                    required
                                    class="input-field">
                             @error('shipping_name')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="shipping_phone" class="block text-gray-700 font-medium mb-2">Phone Number *</label>
+                            <label for="shipping_phone" class="block text-gray-700 font-semibold mb-2">
+                                Phone Number <span class="text-red-500">*</span>
+                            </label>
                             <input type="tel" id="shipping_phone" name="shipping_phone" 
                                    value="{{ old('shipping_phone') }}" 
                                    required
                                    placeholder="+1234567890"
                                    class="input-field">
                             @error('shipping_phone')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="shipping_address" class="block text-gray-700 font-medium mb-2">Shipping Address *</label>
+                            <label for="shipping_address" class="block text-gray-700 font-semibold mb-2">
+                                Shipping Address <span class="text-red-500">*</span>
+                            </label>
                             <textarea id="shipping_address" name="shipping_address" 
                                       rows="4" 
                                       required
                                       placeholder="Street address, City, State, ZIP Code, Country"
                                       class="input-field">{{ old('shipping_address') }}</textarea>
                             @error('shipping_address')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
 
                     <div class="flex gap-4">
-                        <a href="{{ route('cart.index') }}" class="btn-secondary flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
+                        <a href="{{ route('cart.index') }}" class="btn-secondary">
                             Back to Cart
                         </a>
-                        <button type="submit" class="btn-primary flex-1 flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                            Continue to Verification
+                        <button type="submit" class="flex-1 btn-primary">
+                            Place Order
                         </button>
                     </div>
-
-                    <p class="text-xs text-gray-500 text-center mt-4">
-                        By placing this order, you agree to our terms and conditions. 
-                        You will receive a verification code via email to complete your purchase.
-                    </p>
                 </form>
             </div>
         </div>
 
         <div class="lg:col-span-1">
-            <div class="card p-6 sticky top-24 animate-fade-in">
-                <h3 class="text-xl font-bold mb-6 text-gray-900">Order Summary</h3>
-                <div class="space-y-4 mb-6 pb-6 border-b border-gray-200">
-                    @foreach($cartItems as $item)
-                        <div class="flex justify-between items-start gap-3">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 text-sm truncate">{{ $item['book']->title }}</p>
-                                <p class="text-xs text-gray-600 mt-0.5">Qty: {{ $item['quantity'] }} × ₱{{ number_format($item['book']->price, 2) }}</p>
-                            </div>
-                            <p class="font-semibold text-gray-900 text-sm">₱{{ number_format($item['subtotal'], 2) }}</p>
-                        </div>
-                    @endforeach
+            <div class="card sticky top-24">
+                <div class="p-6 border-b border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-900">Order Summary</h3>
                 </div>
                 
-                <div class="space-y-2 mb-6 pb-6 border-b border-gray-200">
-                    <div class="flex justify-between text-gray-600 text-sm">
-                        <span>Subtotal</span>
-                        <span class="font-medium text-gray-900">₱{{ number_format($total, 2) }}</span>
+                <div class="p-6">
+                    <div class="space-y-4 mb-6">
+                        @foreach($cartItems as $item)
+                            <div class="flex items-start gap-3">
+                                <div class="w-16 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    @if($item['book']->cover_image)
+                                        <img src="{{ asset('storage/' . $item['book']->cover_image) }}"
+                                             alt="{{ $item['book']->title }}" class="h-full object-contain">
+                                    @else
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    @endif
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-gray-900 text-sm truncate">{{ $item['book']->title }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Qty: {{ $item['quantity'] }} × ₱{{ number_format($item['book']->price, 2) }}</p>
+                                    <p class="font-semibold text-emerald-600 mt-1">₱{{ number_format($item['subtotal'], 2) }}</p>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="flex justify-between text-gray-600 text-sm">
-                        <span>Shipping</span>
-                        <span class="font-medium text-green-600">Free</span>
+                    
+                    <div class="border-t pt-4 space-y-3">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span>₱{{ number_format($total, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Shipping</span>
+                            <span class="text-emerald-600 font-medium">FREE</span>
+                        </div>
+                        <div class="border-t pt-3 flex justify-between items-center">
+                            <span class="text-lg font-bold text-gray-900">Total</span>
+                            <span class="text-2xl font-bold text-emerald-600">₱{{ number_format($total, 2) }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-lg text-gray-900">Total</span>
-                    <span class="font-bold text-2xl text-primary-600">₱{{ number_format($total, 2) }}</span>
+                    <div class="mt-6 pt-6 border-t space-y-3">
+                        <div class="flex items-start space-x-2 text-sm text-gray-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p>Secure checkout</p>
+                        </div>
+                        <div class="flex items-start space-x-2 text-sm text-gray-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            </svg>
+                            <p>Free shipping on all orders</p>
+                        </div>
+                        <div class="flex items-start space-x-2 text-sm text-gray-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            <p>Easy returns within 30 days</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

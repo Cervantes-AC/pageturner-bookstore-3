@@ -4,14 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
 
-class Book extends Model implements Auditable
+class Book extends Model
 {
-    use HasFactory, \OwenIt\Auditing\Auditable;
-
-    protected $auditExclude = ['cover_image', 'updated_at'];
-
+    use HasFactory;
 
     protected $fillable = [
         'category_id',
@@ -23,7 +19,6 @@ class Book extends Model implements Auditable
         'stock_quantity',
         'description',
         'cover_image',
-        'is_featured',
     ];
 
     public function category()

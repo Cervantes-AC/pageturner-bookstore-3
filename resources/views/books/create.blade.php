@@ -135,17 +135,6 @@
                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">{{ old('description') }}</textarea>
             </div>
 
-            <!-- Featured Checkbox -->
-            <div class="mb-4">
-                <label class="flex items-center">
-                    <input type="checkbox" name="is_featured" value="1" 
-                           {{ old('is_featured') ? 'checked' : '' }}
-                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                    <span class="ml-2 text-gray-700 font-medium">Feature this book on homepage</span>
-                </label>
-                <p class="text-gray-500 text-sm mt-1">Featured books appear in the "Featured Books" section</p>
-            </div>
-
             <!-- Image Picker With Preview -->
             <div class="mb-6">
                 <label class="block text-gray-700 font-medium mb-2">Cover Image</label>

@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\User;
-use App\Notifications\NewOrderNotification;
-use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -44,7 +41,8 @@ class OrderController extends Controller
                 return back()->with('error', "Not enough stock for: {$book->title}");
             }
 
-            $total += $book->price * $item['quantity'];
+            $subtotal = $book->price * $item['quantity'];
+            $total += $subtotal;
 
             $orderItems[] = [
                 'book_id' => $book->id,
@@ -64,18 +62,11 @@ class OrderController extends Controller
 
         foreach ($orderItems as $item) {
             $order->orderItems()->create($item);
+            // Reduce stock
             Book::find($item['book_id'])->decrement('stock_quantity', $item['quantity']);
         }
 
-        $order->load(['user', 'orderItems.book']);
-
-        $order->user->notify(new OrderStatusNotification($order));
-
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new NewOrderNotification($order));
-        }
-
+        // Clear cart after successful order
         session()->forget('cart');
 
         return redirect()->route('orders.show', $order)
@@ -84,7 +75,10 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $this->authorize('view', $order);
+        // Only allow owner or admin to view
+        if (auth()->id() !== $order->user_id && !auth()->user()->isAdmin()) {
+            abort(403);
+        }
 
         $order->load('orderItems.book');
         return view('orders.show', compact('order'));
@@ -92,17 +86,15 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        $this->authorize('updateStatus', $order);
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
 
         $request->validate([
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
-        $oldStatus = $order->status;
         $order->update(['status' => $request->status]);
-
-        // Notify customer about status change
-        $order->user->notify(new OrderStatusNotification($order, $oldStatus));
 
         return back()->with('success', 'Order status updated!');
     }
