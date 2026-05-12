@@ -53,6 +53,9 @@ class DatabaseSeeder extends Seeder
                     'stock_quantity' => $book['stock'],
                     'description' => "A great book titled '{$book['title']}' by {$book['author']}.",
                     'publication_year' => rand(1950, 2024),
+                    'published_at' => now()->subYears(rand(1, 50))->format('Y-m-d'),
+                    'format' => 'Paperback',
+                    'cover_image' => 'https://picsum.photos/seed/' . Str::slug($book['title']) . '/400/600',
                 ]);
             }
         }
@@ -71,6 +74,11 @@ class DatabaseSeeder extends Seeder
                 'method' => 'POST',
             ]);
         }
+
+        $this->call([
+            CategorySeeder::class,
+            MassBookSeeder::class,
+        ]);
     }
 
     private function generateISBN()

@@ -1,47 +1,47 @@
 @extends('layouts.app')
 @section('title', 'Admin Dashboard - PageTurner')
 @section('header')
-    <h2 class="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-    <p class="text-gray-600 mt-1">System overview and data management</p>
+    <h2 class="font-heading text-3xl font-bold text-ink-900">Admin Dashboard</h2>
+    <p class="text-ink-400 mt-1">System overview and data management</p>
 @endsection
 
 @section('content')
     {{-- Stats Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Books</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $data['totalBooks'] }}</p>
+                    <p class="text-sm font-medium text-ink-400">Total Books</p>
+                    <p class="font-heading text-3xl font-bold text-ink-900">{{ $data['totalBooks'] }}</p>
                 </div>
-                <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-gold-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Orders</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $data['totalOrders'] }}</p>
+                    <p class="text-sm font-medium text-ink-400">Total Orders</p>
+                    <p class="font-heading text-3xl font-bold text-ink-900">{{ $data['totalOrders'] }}</p>
                 </div>
-                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-2">{{ $data['pendingOrders'] }} pending</p>
+            <p class="text-sm text-ink-400 mt-2">{{ $data['pendingOrders'] }} pending</p>
         </div>
 
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Users</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $data['totalUsers'] }}</p>
+                    <p class="text-sm font-medium text-ink-400">Total Users</p>
+                    <p class="font-heading text-3xl font-bold text-ink-900">{{ $data['totalUsers'] }}</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,11 +51,11 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Backup Health</p>
-                    <p class="text-3xl font-bold {{ $data['backupHealth'] === 'healthy' ? 'text-emerald-600' : 'text-red-600' }}">
+                    <p class="text-sm font-medium text-ink-400">Backup Health</p>
+                    <p class="font-heading text-3xl font-bold {{ $data['backupHealth'] === 'healthy' ? 'text-emerald-600' : 'text-red-600' }}">
                         {{ ucfirst($data['backupHealth']) }}
                     </p>
                 </div>
@@ -66,7 +66,7 @@
                 </div>
             </div>
             @if($data['lastBackup'])
-                <p class="text-xs text-gray-500 mt-2">Last: {{ $data['lastBackup']->created_at->diffForHumans() }}</p>
+                <p class="text-xs text-ink-400 mt-2">Last: {{ $data['lastBackup']->created_at->diffForHumans() }}</p>
             @endif
         </div>
     </div>
@@ -74,8 +74,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {{-- Quick Actions --}}
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Quick Actions</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <a href="{{ route('admin.import-export.import') }}" class="p-4 bg-indigo-50 rounded-lg text-center hover:bg-indigo-100 transition-colors">
                         <svg class="w-6 h-6 text-indigo-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,16 +116,15 @@
                 </div>
             </div>
 
-            {{-- Recent Imports/Exports --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Imports</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                    <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Recent Imports</h3>
                     <div class="space-y-3">
                         @forelse($data['recentImports'] as $import)
                             <div class="flex items-center justify-between text-sm">
                                 <div>
-                                    <span class="font-medium text-gray-700">{{ $import->filename }}</span>
-                                    <span class="text-gray-500 ml-2">by {{ $import->user->name ?? 'System' }}</span>
+                                    <span class="font-medium text-ink-700">{{ $import->filename }}</span>
+                                    <span class="text-ink-400 ml-2">by {{ $import->user->name ?? 'System' }}</span>
                                 </div>
                                 <span class="px-2 py-1 rounded text-xs font-medium
                                     {{ $import->status === 'completed' ? 'bg-emerald-100 text-emerald-700' : '' }}
@@ -136,18 +135,18 @@
                                 </span>
                             </div>
                         @empty
-                            <p class="text-gray-500 text-sm">No imports yet</p>
+                            <p class="text-ink-400 text-sm">No imports yet</p>
                         @endforelse
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Exports</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                    <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Recent Exports</h3>
                     <div class="space-y-3">
                         @forelse($data['recentExports'] as $export)
                             <div class="flex items-center justify-between text-sm">
                                 <div>
-                                    <span class="font-medium capitalize text-gray-700">{{ $export->type }} export</span>
-                                    <span class="text-gray-500 ml-2">({{ strtoupper($export->format) }})</span>
+                                    <span class="font-medium capitalize text-ink-700">{{ $export->type }} export</span>
+                                    <span class="text-ink-400 ml-2">({{ strtoupper($export->format) }})</span>
                                 </div>
                                 <span class="px-2 py-1 rounded text-xs font-medium
                                     {{ $export->status === 'completed' ? 'bg-emerald-100 text-emerald-700' : '' }}
@@ -157,29 +156,29 @@
                                 </span>
                             </div>
                         @empty
-                            <p class="text-gray-500 text-sm">No exports yet</p>
+                            <p class="text-ink-400 text-sm">No exports yet</p>
                         @endforelse
                     </div>
-                    <p class="text-xs text-gray-500 mt-3">Total exports: {{ $data['exportCount'] }}</p>
+                    <p class="text-xs text-ink-400 mt-3">Total exports: {{ $data['exportCount'] }}</p>
                 </div>
             </div>
         </div>
 
         {{-- Side Panel --}}
         <div class="space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">System Health</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">System Health</h3>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600">Import Success Rate</span>
+                        <span class="text-sm text-ink-400">Import Success Rate</span>
                         <span class="text-sm font-semibold text-emerald-600">{{ $data['importSuccessRate'] }}%</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600">Database Size</span>
-                        <span class="text-sm font-semibold text-gray-900">{{ $data['dbSize'] }} MB</span>
+                        <span class="text-sm text-ink-400">Database Size</span>
+                        <span class="text-sm font-semibold text-ink-900">{{ $data['dbSize'] }} MB</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600">Backup Status</span>
+                        <span class="text-sm text-ink-400">Backup Status</span>
                         <span class="text-sm font-semibold {{ $data['backupHealth'] === 'healthy' ? 'text-emerald-600' : 'text-red-600' }}">
                             {{ ucfirst($data['backupHealth']) }}
                         </span>
@@ -187,17 +186,17 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Audit Events</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Recent Audit Events</h3>
                 <div class="space-y-3">
                     @forelse($data['recentAudits'] as $audit)
                         <div class="text-sm">
-                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">{{ $audit->event }}</span>
-                            <span class="text-gray-600 ml-1">{{ class_basename($audit->auditable_type) }} #{{ $audit->auditable_id }}</span>
-                            <p class="text-gray-400 text-xs mt-0.5">{{ $audit->created_at->diffForHumans() }}</p>
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-parchment-100 text-ink-700">{{ $audit->event }}</span>
+                            <span class="text-ink-400 ml-1">{{ class_basename($audit->auditable_type) }} #{{ $audit->auditable_id }}</span>
+                            <p class="text-ink-400 text-xs mt-0.5">{{ $audit->created_at->diffForHumans() }}</p>
                         </div>
                     @empty
-                        <p class="text-gray-500 text-sm">No audit events yet</p>
+                        <p class="text-ink-400 text-sm">No audit events yet</p>
                     @endforelse
                 </div>
                 <a href="{{ route('admin.audit.index') }}" class="mt-4 inline-block text-sm text-indigo-600 hover:text-indigo-700 font-medium">View all logs</a>
@@ -205,7 +204,7 @@
 
             @if($data['criticalAudits']->count() > 0)
             <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 p-6">
-                <h3 class="text-lg font-semibold text-red-800 mb-4">Security Alerts</h3>
+                <h3 class="font-heading text-lg font-semibold text-red-800 mb-4">Security Alerts</h3>
                 <div class="space-y-3">
                     @foreach($data['criticalAudits'] as $audit)
                         <div class="text-sm">

@@ -1,27 +1,27 @@
 @extends('layouts.app')
 @section('title', 'Export Logs - Admin - PageTurner')
 @section('header')
-    <h2 class="text-3xl font-bold text-gray-900">Export Logs</h2>
-    <p class="text-gray-600 mt-1">Track all export operations</p>
+    <h2 class="font-heading text-3xl font-bold text-ink-900">Export Logs</h2>
+    <p class="text-ink-400 mt-1">Track all export operations</p>
 @endsection
 
 @section('content')
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-parchment-200 overflow-hidden">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50">
+            <thead class="bg-parchment-100">
                 <tr>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Format</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">User</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Filters</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                    <th class="text-left px-4 py-3 font-medium text-gray-600">Download</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Type</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Format</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Status</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">User</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Filters</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Date</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Download</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-parchment-200">
                 @forelse($exports as $export)
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-parchment-50">
                     <td class="px-4 py-3 capitalize font-medium">{{ $export->type }}</td>
                     <td class="px-4 py-3 uppercase">{{ $export->format }}</td>
                     <td class="px-4 py-3">
@@ -32,22 +32,22 @@
                             {{ $export->status }}
                         </span>
                     </td>
-                    <td class="px-4 py-3 text-gray-600">{{ $export->user->name ?? 'System' }}</td>
-                    <td class="px-4 py-3 text-gray-500 max-w-xs truncate">{{ json_encode($export->filters) }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ $export->created_at->format('Y-m-d H:i') }}</td>
+                    <td class="px-4 py-3 text-ink-400">{{ $export->user->name ?? 'System' }}</td>
+                    <td class="px-4 py-3 text-ink-400 max-w-xs truncate">{{ json_encode($export->filters) }}</td>
+                    <td class="px-4 py-3 text-ink-400">{{ $export->created_at->format('Y-m-d H:i') }}</td>
                     <td class="px-4 py-3">
                         @if($export->file_path)
-                            <a href="{{ route('admin.import-export.exports.download', $export) }}" class="text-indigo-600 hover:text-indigo-700 font-medium">
+                            <a href="{{ route('admin.import-export.exports.download', $export) }}" class="text-gold-600 hover:text-gold-700 font-medium">
                                 Download
                             </a>
                         @else
-                            <span class="text-gray-400">N/A</span>
+                            <span class="text-ink-300">N/A</span>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">No exports yet.</td>
+                    <td colspan="7" class="px-4 py-8 text-center text-ink-400">No exports yet.</td>
                 </tr>
                 @endforelse
             </tbody>

@@ -20,7 +20,9 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, 
 
     public function query()
     {
-        $query = Book::with('category');
+        $query = Book::query()
+            ->select(['isbn', 'title', 'author', 'price', 'format', 'stock_quantity', 'category_id', 'description', 'created_at'])
+            ->with('category:id,name');
 
         if (!empty($this->filters['category_id'])) {
             $query->where('category_id', $this->filters['category_id']);
@@ -45,7 +47,8 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, 
             $query->whereDate('created_at', '<=', $this->filters['date_to']);
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->where('is_active', true);
+        $query->orderBy('id');
         return $query;
     }
 
@@ -56,6 +59,7 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, 
             'Title',
             'Author',
             'Price',
+            'Format',
             'Stock',
             'Category',
             'Description',
@@ -70,6 +74,7 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, 
             $book->title,
             $book->author,
             $book->price,
+            $book->format ?? 'N/A',
             $book->stock_quantity,
             $book->category->name ?? 'N/A',
             $book->description,
@@ -79,6 +84,6 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, 
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 2000;
     }
 }

@@ -7,7 +7,6 @@ use App\Console\Commands\PruneNotifications;
 use App\Console\Commands\AuditArchive;
 use App\Console\Commands\RotateLogs;
 
-// Backup schedule
 Schedule::command('backup:run')
     ->dailyAt('02:00')
     ->withoutOverlapping()
@@ -22,32 +21,36 @@ Schedule::command('backup:clean')
     ->dailyAt('03:00')
     ->withoutOverlapping();
 
-// Order cleanup - cancel pending orders > 24 hours
 Schedule::command(CleanupPendingOrders::class)
     ->hourly()
     ->withoutOverlapping();
 
-// Session cleanup
 Schedule::command('session:gc')
     ->daily()
     ->description('Clear expired sessions');
 
-// Log rotation - weekly
 Schedule::command(RotateLogs::class)
     ->weekly()
     ->withoutOverlapping();
 
-// Daily sales report at 6 AM
 Schedule::command(GenerateDailyReport::class)
     ->dailyAt('06:00')
     ->withoutOverlapping();
 
-// Prune old notifications (weekly)
 Schedule::command(PruneNotifications::class)
     ->weekly()
     ->withoutOverlapping();
 
-// Archive audit logs (monthly)
 Schedule::command(AuditArchive::class)
     ->monthly()
     ->withoutOverlapping();
+
+Schedule::command('app:refresh-materialized-views')
+    ->hourly()
+    ->withoutOverlapping()
+    ->description('Refresh bestseller stats materialized view');
+
+Schedule::command('scout:import-books')
+    ->dailyAt('04:00')
+    ->withoutOverlapping()
+    ->description('Batch import books into Scout search index');

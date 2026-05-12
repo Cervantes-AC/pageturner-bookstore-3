@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Resources\BookResource;
+use App\Http\Resources\CategoryResource;
+use App\Models\AuditLog;
 use App\Models\Book;
 use App\Models\Category;
-use App\Models\AuditLog;
+use App\Repositories\BookRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
 
-// ─── Rate Limiter Registration ──────────────────────────────
 RateLimiter::for('api', function (Request $request) {
     $user = $request->user();
     $tier = $user ? $user->getRateLimitTier() : 'public';
@@ -23,36 +25,81 @@ RateLimiter::for('api', function (Request $request) {
         });
 });
 
-// ─── Public API Routes ──────────────────────────────────────
 Route::middleware('throttle:api')->group(function () {
 
-    // Books
-    Route::get('/books', function (Request $request) {
-        $query = Book::with('category');
-        if ($request->filled('category')) $query->where('category_id', $request->category);
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('title', 'like', "%{$s}%")->orWhere('author', 'like', "%{$s}%");
-            });
+    Route::get('/books', function (Request $request, BookRepository $repository) {
+        if ($request->filled('isbn')) {
+            $book = $repository->findByIsbn($request->isbn);
+            if (!$book) {
+                return response()->json(['message' => 'Book not found'], 404);
+            }
+            return response()->json(new BookResource($book));
         }
-        return response()->json($query->paginate($request->per_page ?? 20));
+
+        if ($request->filled('search')) {
+            $results = $repository->searchByFulltext($request->search, (int)($request->per_page ?? 50));
+            return BookResource::collection($results)->response();
+        }
+
+        if ($request->filled('category')) {
+            $results = $repository->getCatalogByCategory(
+                (int)$request->category,
+                (int)($request->per_page ?? 100)
+            );
+            return BookResource::collection($results)->response();
+        }
+
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $min = (float)($request->min_price ?? 0);
+            $max = (float)($request->max_price ?? 999999);
+            $results = $repository->getBooksByPriceRange($min, $max, (int)($request->per_page ?? 100));
+            return BookResource::collection($results)->response();
+        }
+
+        $results = $repository->getActiveCatalog((int)($request->per_page ?? 100));
+        return BookResource::collection($results)->response();
     });
 
-    Route::get('/books/{book}', function (Book $book) {
-        return response()->json($book->load('category', 'reviews.user'));
+    Route::get('/books/{book}', function (Book $book, BookRepository $repository) {
+        $book = $repository->findById($book->id);
+        if (!$book) {
+            return response()->json(['message' => 'Book not found'], 404);
+        }
+        return response()->json(new BookResource($book));
     });
 
-    // Categories
     Route::get('/categories', function () {
-        return response()->json(Category::withCount('books')->get());
+        $categories = Category::withCount('books')->get();
+        return CategoryResource::collection($categories);
     });
 
     Route::get('/categories/{category}', function (Category $category) {
-        return response()->json($category->load('books'));
+        $category->loadCount('books');
+        $books = $category->books()
+            ->select(['id', 'isbn', 'title', 'author', 'price', 'format', 'stock_quantity', 'cover_image', 'published_at'])
+            ->where('is_active', true)
+            ->orderBy('published_at', 'desc')
+            ->cursorPaginate(100);
+
+        return response()->json([
+            'category' => new CategoryResource($category),
+            'books' => BookResource::collection($books),
+        ]);
     });
 
-    // Audit logs (admin only)
+    Route::get('/bestseller-stats', function () {
+        $stats = \Illuminate\Support\Facades\DB::table('mv_bestseller_stats')
+            ->join('categories', 'mv_bestseller_stats.category_id', '=', 'categories.id')
+            ->select([
+                'mv_bestseller_stats.*',
+                'categories.name as category_name',
+            ])
+            ->orderBy('total_books', 'desc')
+            ->get();
+
+        return response()->json($stats);
+    });
+
     Route::middleware('auth')->get('/audit-logs', function (Request $request) {
         if (!$request->user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized.'], 403);
@@ -63,18 +110,18 @@ Route::middleware('throttle:api')->group(function () {
     });
 });
 
-// ─── Authenticated API Routes ──────────────────────────────
 Route::middleware(['auth', 'throttle:api'])->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });
 
     Route::get('/user/orders', function (Request $request) {
-        return response()->json($request->user()->orders()->with('orderItems.book')->latest()->paginate(20));
+        return response()->json(
+            $request->user()->orders()->with('orderItems.book')->latest()->paginate(20)
+        );
     });
 });
 
-// ─── Auth routes (strict rate limit) ───────────────────────
 Route::post('/login', function (Request $request) {
     return response()->json(['message' => 'Login endpoint']);
 })->middleware('throttle:10,1');
