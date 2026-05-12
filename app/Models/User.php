@@ -45,6 +45,13 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function getRateLimitTier(): string
+    {
+        if ($this->isAdmin()) return 'admin';
+        if ($this->role === 'premium') return 'premium';
+        return 'standard';
+    }
+
     public function hasPurchased($bookId)
     {
         return $this->orders()
@@ -53,5 +60,4 @@ class User extends Authenticatable
             })
             ->exists();
     }
-
 }

@@ -1,54 +1,31 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Factories;
 
-use App\Models\User;
-use App\Models\Category;
-use App\Models\Book;
-use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
-class DatabaseSeeder extends Seeder
+class UserFactory extends Factory
 {
-    public function run(): void
+    protected static ?string $password;
+
+    public function definition(): array
     {
-        // Clear database
-        User::truncate();
-        Category::truncate();
-        Book::truncate();
+        return [
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'role' => 'customer',
+        ];
+    }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Admin User
-        |--------------------------------------------------------------------------
-        */
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('root123'),
-            'role' => 'admin'
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
         ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Customers
-        |--------------------------------------------------------------------------
-        */
-        User::factory(10)->create([
-            'role' => 'customer'
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Categories
-        |--------------------------------------------------------------------------
-        */
-        Category::factory(8)->create();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Books
-        |--------------------------------------------------------------------------
-        */
-        Book::factory(10)->create();
     }
 }

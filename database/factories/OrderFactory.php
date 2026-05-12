@@ -12,9 +12,7 @@ class OrderFactory extends Factory
         return [
             'user_id' => User::factory(),
             'total_amount' => fake()->randomFloat(2, 10, 500),
-            'status' => fake()->randomElement([
-                'pending', 'processing', 'completed', 'cancelled'
-            ]),
+            'status' => fake()->randomElement(['pending', 'processing', 'completed', 'cancelled']),
         ];
     }
 }

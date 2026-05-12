@@ -8,9 +8,12 @@ class CategoryFactory extends Factory
 {
     public function definition(): array
     {
+        $categories = ['Fiction', 'Non-Fiction', 'Science', 'Technology',
+            'Biography', 'History', 'Romance', 'Mystery',
+            'Self-Help', 'Children'];
         return [
-            'name' => 'Sample Category',
-            'description' => 'Sample category description'
+            'name' => fake()->unique()->randomElement($categories),
+            'description' => fake()->paragraph(),
         ];
     }
 }
