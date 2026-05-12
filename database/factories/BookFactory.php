@@ -51,8 +51,8 @@ class BookFactory extends Factory
             'description' => $this->faker->paragraphs(rand(2, 5), true),
             'cover_image' => 'https://picsum.photos/seed/' . Str::random(8) . '/400/600',
             'is_active' => $this->faker->boolean(85),
-            'created_at' => now(),
-            'updated_at' => now(),
+            'created_at' => now()->format('Y-m-d H:i:s'),
+            'updated_at' => now()->format('Y-m-d H:i:s'),
         ];
     }
 

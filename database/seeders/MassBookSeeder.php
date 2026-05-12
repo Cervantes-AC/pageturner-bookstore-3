@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class MassBookSeeder extends Seeder
 {
-    private const CHUNK_SIZE = 5000;
+    private const CHUNK_SIZE = 4000;
     private const TOTAL_RECORDS = 1000000;
 
     public function run(): void

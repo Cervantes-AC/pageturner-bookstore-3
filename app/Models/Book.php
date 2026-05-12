@@ -55,6 +55,11 @@ class Book extends Model
         return $this->reviews()->avg('rating') ?? 0;
     }
 
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
+
     public function toSearchableArray(): array
     {
         return [
