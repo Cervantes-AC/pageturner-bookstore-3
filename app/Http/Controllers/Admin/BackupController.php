@@ -53,6 +53,9 @@ class BackupController extends Controller
                 'status' => 'failed',
                 'output' => $e->getMessage(),
             ]);
+        } finally {
+            // Close database connections to prevent connection pool exhaustion
+            DB::disconnect();
         }
 
         if ($monitor->status === 'failed') {

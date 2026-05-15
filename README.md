@@ -169,6 +169,14 @@ PageTurner is a comprehensive, enterprise-grade online bookstore management syst
 
 ## Installation Instructions
 
+### Prerequisites
+- PHP 8.2 or higher
+- Composer
+- Node.js and npm
+- MySQL 8.0+ or compatible database
+- Redis (for caching, sessions, and queues)
+- Git
+
 ### 1. Clone the Repository
 ```bash
 git clone [your-repository-url]
@@ -186,14 +194,52 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` file with your database configuration:
+Edit `.env` file with your configuration:
 ```env
+APP_NAME="PageTurner Bookstore"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+
+# Database Configuration
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=pageturner_bookstore
 DB_USERNAME=root
 DB_PASSWORD=your_password
+
+# Read Replica Configuration (optional)
+DB_READ_HOST_1=127.0.0.1
+DB_READ_HOST_2=127.0.0.1
+DB_WRITE_HOST=127.0.0.1
+
+# Redis Configuration
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_CACHE_DB=1
+REDIS_SESSION_DB=2
+REDIS_QUEUE_DB=3
+
+# Session & Cache
+SESSION_DRIVER=redis
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+
+# Mail Configuration
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@example.com"
+
+# Scout Search Configuration
+SCOUT_DRIVER=database
+# SCOUT_DRIVER=meilisearch (optional)
+# MEILISEARCH_HOST=http://localhost:7700
 ```
 
 ### 4. Generate Application Key
@@ -201,21 +247,19 @@ DB_PASSWORD=your_password
 php artisan key:generate
 ```
 
-### 5. Install Laravel Breeze
-```bash
-composer require laravel/breeze --dev
-php artisan breeze:install blade
-npm run build
-```
-
-### 6. Run Migrations and Seeders
+### 5. Run Migrations and Seeders
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-### 7. Create Storage Link (for file uploads)
+### 6. Create Storage Link (for file uploads)
 ```bash
 php artisan storage:link
+```
+
+### 7. Build Frontend Assets
+```bash
+npm run build
 ```
 
 ### 8. Start Development Server
@@ -223,7 +267,15 @@ php artisan storage:link
 php artisan serve
 ```
 
-### 9. Access the Application
+### 9. Start Queue Worker (in another terminal)
+```bash
+php artisan queue:listen
+```
+
+### 10. Start Redis Server
+Ensure Redis is running on your system (typically on port 6379)
+
+### 11. Access the Application
 Visit: `http://localhost:8000`
 
 ## Default Login Credentials
