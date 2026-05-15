@@ -9,6 +9,7 @@ use App\Models\ImportLog;
 use App\Models\ExportLog;
 use App\Models\Book;
 use App\Models\Order;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -20,6 +21,12 @@ class DashboardController extends Controller
             'totalBooks' => Book::count(),
             'totalOrders' => Order::count(),
             'totalUsers' => User::count(),
+            'recentOrders' => Order::with('user')->latest()->take(5)->get(),
+            'orderStatusSummary' => Order::selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status')
+                ->toArray(),
+            'recentReviews' => Review::with('user', 'book')->latest()->take(5)->get(),
             'recentImports' => ImportLog::with('user')->latest()->take(5)->get(),
             'recentExports' => ExportLog::with('user')->latest()->take(5)->get(),
             'lastBackup' => BackupMonitoring::where('status', 'success')->latest()->first(),

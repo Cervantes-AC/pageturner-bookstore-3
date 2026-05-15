@@ -6,10 +6,9 @@ use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class UsersExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, WithChunkReading
+class UsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $redactPii;
 

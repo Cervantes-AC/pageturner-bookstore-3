@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RateLimitController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController as UserDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
@@ -26,15 +27,14 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
 
 // ─── Authenticated Routes ─────────────────────────────────────
-Route::middleware('auth')->group(function () {
+// Email verification is optional for browsing; enforced on orders/reviews
+Route::middleware(['auth', '2fa'])->group(function () {
 
     // Profile (from Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/dashboard', function () {
-                return view('dashboard');
-            })->name('dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -44,15 +44,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 
-    // Reviews
-    Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    // Orders (email verification required)
+    Route::middleware('verified')->group(function () {
+        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    });
 
-    // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    // Reviews - create requires email verification and purchase
+    Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])
+        ->middleware('verified')
+        ->name('reviews.store');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // ─── User Data Portability ────────────────────────────────
     Route::get('/my-data/export', [ImportExportController::class, 'exportMyData'])->name('user.export-data');
@@ -61,7 +65,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', '2fa', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

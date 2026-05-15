@@ -72,47 +72,93 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {{-- Quick Actions --}}
+        {{-- Main Content --}}
         <div class="lg:col-span-2 space-y-6">
+            {{-- Quick Actions --}}
             <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
                 <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Quick Actions</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <a href="{{ route('admin.import-export.import') }}" class="p-4 bg-indigo-50 rounded-lg text-center hover:bg-indigo-100 transition-colors">
-                        <svg class="w-6 h-6 text-indigo-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
+                        <svg class="w-6 h-6 text-indigo-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                         <span class="text-sm font-medium text-indigo-700">Import Books</span>
                     </a>
                     <a href="{{ route('admin.import-export.export') }}" class="p-4 bg-emerald-50 rounded-lg text-center hover:bg-emerald-100 transition-colors">
-                        <svg class="w-6 h-6 text-emerald-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <svg class="w-6 h-6 text-emerald-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span class="text-sm font-medium text-emerald-700">Export Books</span>
                     </a>
                     <a href="{{ route('admin.backup.index') }}" class="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors">
-                        <svg class="w-6 h-6 text-purple-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
+                        <svg class="w-6 h-6 text-purple-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         <span class="text-sm font-medium text-purple-700">Run Backup</span>
                     </a>
                     <a href="{{ route('admin.audit.index') }}" class="p-4 bg-amber-50 rounded-lg text-center hover:bg-amber-100 transition-colors">
-                        <svg class="w-6 h-6 text-amber-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
+                        <svg class="w-6 h-6 text-amber-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         <span class="text-sm font-medium text-amber-700">Audit Logs</span>
                     </a>
                     <a href="{{ route('admin.rate-limits.index') }}" class="p-4 bg-rose-50 rounded-lg text-center hover:bg-rose-100 transition-colors">
-                        <svg class="w-6 h-6 text-rose-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                        <svg class="w-6 h-6 text-rose-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         <span class="text-sm font-medium text-rose-700">Rate Limits</span>
                     </a>
                     <a href="{{ route('admin.import-export.exports') }}" class="p-4 bg-teal-50 rounded-lg text-center hover:bg-teal-100 transition-colors">
-                        <svg class="w-6 h-6 text-teal-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <svg class="w-6 h-6 text-teal-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span class="text-sm font-medium text-teal-700">Export Logs</span>
                     </a>
+                </div>
+            </div>
+
+            {{-- Recent Orders --}}
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-heading text-lg font-semibold text-ink-900">Recent Orders</h3>
+                    <a href="{{ route('orders.index') }}" class="text-sm text-gold-600 hover:text-gold-700 font-medium">View all</a>
+                </div>
+                <div class="space-y-3">
+                    @forelse($data['recentOrders'] as $order)
+                        <div class="flex items-center justify-between text-sm p-3 bg-parchment-50 rounded-lg">
+                            <div>
+                                <span class="font-medium text-ink-700">Order #{{ $order->id }}</span>
+                                <span class="text-ink-400 ml-2">by {{ $order->user->name ?? 'N/A' }}</span>
+                                <span class="text-ink-400 ml-2">₱{{ number_format($order->total_amount, 2) }}</span>
+                            </div>
+                            <span class="px-2 py-1 rounded text-xs font-medium
+                                {{ $order->status === 'completed' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
+                                {{ $order->status === 'processing' ? 'bg-blue-100 text-blue-700' : '' }}
+                                {{ $order->status === 'pending' ? 'bg-amber-100 text-amber-700' : '' }}">
+                                {{ ucfirst($order->status) }}
+                            </span>
+                        </div>
+                    @empty
+                        <p class="text-ink-400 text-sm">No orders yet</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Recent Reviews --}}
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Recent Reviews</h3>
+                <div class="space-y-3">
+                    @forelse($data['recentReviews'] as $review)
+                        <div class="text-sm p-3 bg-parchment-50 rounded-lg">
+                            <div class="flex items-center space-x-1 mb-1">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <svg class="w-4 h-4 {{ $i <= $review->rating ? 'text-gold-500' : 'text-parchment-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                @endfor
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-medium text-ink-700">{{ $review->user->name ?? 'N/A' }}</span>
+                                    <span class="text-ink-400"> on </span>
+                                    <a href="{{ route('books.show', $review->book) }}" class="text-gold-600 hover:underline">{{ $review->book->title ?? 'Unknown' }}</a>
+                                </div>
+                                <span class="text-ink-400 text-xs">{{ $review->created_at->diffForHumans() }}</span>
+                            </div>
+                            @if($review->comment)
+                                <p class="text-ink-400 mt-1">"{{ Str::limit($review->comment, 80) }}"</p>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-ink-400 text-sm">No reviews yet</p>
+                    @endforelse
                 </div>
             </div>
 
@@ -166,6 +212,18 @@
 
         {{-- Side Panel --}}
         <div class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Order Status Summary</h3>
+                <div class="space-y-3">
+                    @foreach(['pending' => 'bg-amber-100 text-amber-700', 'processing' => 'bg-blue-100 text-blue-700', 'completed' => 'bg-emerald-100 text-emerald-700', 'cancelled' => 'bg-red-100 text-red-700'] as $status => $classes)
+                        <div class="flex justify-between items-center">
+                            <span class="px-2 py-1 rounded text-xs font-medium {{ $classes }}">{{ ucfirst($status) }}</span>
+                            <span class="text-sm font-semibold text-ink-900">{{ $data['orderStatusSummary'][$status] ?? 0 }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
                 <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">System Health</h3>
                 <div class="space-y-4">

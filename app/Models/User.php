@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -20,6 +21,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -27,6 +30,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
@@ -59,5 +63,23 @@ class User extends Authenticatable
                 $query->where('book_id', $bookId);
             })
             ->exists();
+    }
+
+    public function twoFactorRecoveryCodes(): array
+    {
+        if (empty($this->two_factor_recovery_codes)) {
+            return [];
+        }
+        return json_decode(decrypt($this->two_factor_recovery_codes), true) ?? [];
+    }
+
+    public function setTwoFactorRecoveryCodes(array $codes): void
+    {
+        $this->two_factor_recovery_codes = encrypt(json_encode($codes));
+    }
+
+    public function generateRecoveryCode(): string
+    {
+        return strtoupper(substr(md5(uniqid()), 0, 10));
     }
 }

@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Review;
+use App\Models\User;
+use App\Notifications\NewReviewAdmin;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
     public function store(Request $request, Book $book)
     {
-        // Check if user has purchased the book
         if (!auth()->user()->hasPurchased($book->id)) {
             return back()->with('error', 'You can only review books you have purchased.');
+        }
+
+        if (!auth()->user()->hasVerifiedEmail()) {
+            return back()->with('error', 'You must verify your email before writing a review.');
         }
 
         $validated = $request->validate([
@@ -31,8 +36,13 @@ class ReviewController extends Controller
             $existingReview->update($validated);
             $message = 'Review updated successfully!';
         } else {
-            Review::create($validated);
+            $review = Review::create($validated);
             $message = 'Review submitted successfully!';
+
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new NewReviewAdmin($review));
+            }
         }
 
         return redirect()->route('books.show', $book)

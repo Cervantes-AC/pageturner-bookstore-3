@@ -6,10 +6,9 @@ use App\Models\Book;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class BooksExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, WithChunkReading
+class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
 

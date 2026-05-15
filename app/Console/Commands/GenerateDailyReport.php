@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Order;
+use App\Models\User;
 use App\Models\ExportLog;
 use App\Exports\OrdersExport;
 use Illuminate\Console\Command;
@@ -28,7 +29,7 @@ class GenerateDailyReport extends Command
         Excel::store(new OrdersExport($filters), $fileName, 'public');
 
         ExportLog::create([
-            'user_id' => 1,
+            'user_id' => User::where('role', 'admin')->value('id') ?? 1,
             'type' => 'order',
             'format' => 'xlsx',
             'status' => 'completed',

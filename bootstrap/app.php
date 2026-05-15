@@ -2,7 +2,10 @@
 
 use App\Http\Middleware\ApiRateLimiter;
 use App\Http\Middleware\AuditRequests;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\FieldFiltering;
+use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\TransformApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'audit.requests' => AuditRequests::class,
             'transform.api' => TransformApiResponse::class,
             'field.filtering' => FieldFiltering::class,
+            'role' => CheckRole::class,
+            '2fa' => RequireTwoFactor::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
 
         $middleware->api(append: [

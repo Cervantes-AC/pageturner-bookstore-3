@@ -41,28 +41,39 @@ class ImportExportController extends Controller
             'filename' => $originalName,
             'type' => 'book',
             'total_rows' => 0,
-            'status' => 'pending',
+            'status' => 'processing',
             'file_path' => $path,
         ]);
 
         $import = new BooksImport($importLog, $request->boolean('update_existing'));
-        Excel::import($import, storage_path('app/' . $path));
 
-        $failures = $import->failures();
-        $failureRows = collect($failures)->map(fn($f) => [
-            'row' => $f->row(),
-            'attribute' => $f->attribute(),
-            'errors' => $f->errors(),
-        ]);
+        try {
+            Excel::import($import, storage_path('app/' . $path));
 
-        $importLog->update([
-            'status' => $failures->isNotEmpty() ? 'completed_with_errors' : 'completed',
-            'failures' => $failureRows,
-            'failed_rows' => $failureRows->count(),
-        ]);
+            $failures = $import->failures();
+            $failureRows = collect($failures)->map(fn($f) => [
+                'row' => $f->row(),
+                'attribute' => $f->attribute(),
+                'errors' => $f->errors(),
+            ]);
+
+            $importLog->update([
+                'status' => $failures->isNotEmpty() ? 'completed_with_errors' : 'completed',
+                'failures' => $failureRows,
+                'failed_rows' => $failureRows->count(),
+            ]);
+
+            $message = 'Import completed. ' . $failureRows->count() . ' failures.';
+        } catch (\Exception $e) {
+            $importLog->update([
+                'status' => 'failed',
+                'failures' => [['error' => $e->getMessage()]],
+            ]);
+            $message = 'Import failed: ' . $e->getMessage();
+        }
 
         return redirect()->route('admin.import-export.import')
-            ->with('success', 'Import completed. ' . $failureRows->count() . ' failures.');
+            ->with('success', $message);
     }
 
     public function downloadTemplate()

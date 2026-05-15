@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\User;
+use App\Notifications\OrderPlaced;
+use App\Notifications\OrderStatusChanged;
+use App\Notifications\NewOrderAdmin;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -62,12 +65,17 @@ class OrderController extends Controller
 
         foreach ($orderItems as $item) {
             $order->orderItems()->create($item);
-            // Reduce stock
             Book::find($item['book_id'])->decrement('stock_quantity', $item['quantity']);
         }
 
-        // Clear cart after successful order
         session()->forget('cart');
+
+        auth()->user()->notify(new OrderPlaced($order));
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewOrderAdmin($order));
+        }
 
         return redirect()->route('orders.show', $order)
             ->with('success', 'Order placed successfully!');
@@ -75,7 +83,6 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        // Only allow owner or admin to view
         if (auth()->id() !== $order->user_id && !auth()->user()->isAdmin()) {
             abort(403);
         }
@@ -95,6 +102,8 @@ class OrderController extends Controller
         ]);
 
         $order->update(['status' => $request->status]);
+
+        $order->user->notify(new OrderStatusChanged($order));
 
         return back()->with('success', 'Order status updated!');
     }

@@ -6,10 +6,9 @@ use App\Models\Order;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, WithChunkReading
+class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
 

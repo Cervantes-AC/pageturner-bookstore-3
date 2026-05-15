@@ -10,12 +10,11 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Illuminate\Validation\Rule;
 
-class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, ShouldQueue, SkipsOnFailure
+class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnFailure
 {
     use SkipsFailures;
 
@@ -35,7 +34,7 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             return null;
         }
 
-        $isbn = trim($row['isbn']);
+        $isbn = (string) trim($row['isbn']);
         $existing = Book::where('isbn', $isbn)->first();
 
         if ($existing) {
@@ -67,12 +66,15 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     public function rules(): array
     {
         return [
-            'isbn' => 'required|string',
+            'isbn' => [
+                'required',
+                'regex:/^(?:\d{9}[\dX]|\d{13})$/',
+            ],
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'price' => 'required|numeric|min:0|max:9999.99',
             'stock' => 'required|integer|min:0',
-            'category' => 'required|string',
+            'category' => 'required|string|exists:categories,name',
         ];
     }
 

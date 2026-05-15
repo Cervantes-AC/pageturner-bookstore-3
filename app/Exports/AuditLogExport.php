@@ -6,10 +6,9 @@ use App\Models\AuditLog;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class AuditLogExport implements FromQuery, WithHeadings, WithMapping, ShouldQueue, WithChunkReading
+class AuditLogExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
 

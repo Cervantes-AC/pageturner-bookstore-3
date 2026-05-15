@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,4 +57,27 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+});
+
+// ─── Two-Factor Authentication Routes ─────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallenge'])
+        ->name('two-factor.challenge');
+    Route::post('/two-factor/verify', [TwoFactorController::class, 'verifyChallenge'])
+        ->name('two-factor.verify');
+    Route::post('/two-factor/resend', [TwoFactorController::class, 'resendCode'])
+        ->name('two-factor.resend');
+
+    Route::get('/two-factor/recovery', function () {
+        return view('auth.two-factor-recovery');
+    })->name('two-factor.recovery');
+    Route::post('/two-factor/recovery/verify', [TwoFactorController::class, 'verifyRecoveryCode'])
+        ->name('two-factor.recovery.verify');
+
+    Route::get('/two-factor/setup', [TwoFactorController::class, 'showSetup'])
+        ->name('two-factor.setup');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])
+        ->name('two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])
+        ->name('two-factor.disable');
 });
