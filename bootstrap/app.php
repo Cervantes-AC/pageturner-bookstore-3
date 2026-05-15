@@ -33,6 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'transform.api',
             'field.filtering',
         ]);
+
+        $middleware->web(append: [
+            'audit.requests',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

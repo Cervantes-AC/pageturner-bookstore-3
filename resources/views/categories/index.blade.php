@@ -20,13 +20,42 @@
 @endsection
 
 @section('content')
+    <div class="bg-white border border-parchment-200 rounded-lg shadow-sm p-5 mb-8">
+        <form action="{{ route('categories.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-4 items-end">
+            <div>
+                <label class="block text-ink-700 text-sm font-semibold mb-2">Search Categories</label>
+                <div class="relative">
+                    <input type="text" name="search" value="{{ request('search') }}" class="input-field pl-11" placeholder="Genre or description">
+                    <svg class="w-5 h-5 text-parchment-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div>
+                <label class="block text-ink-700 text-sm font-semibold mb-2">Sort</label>
+                <select name="sort" class="input-field">
+                    <option value="">Name: A-Z</option>
+                    <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>Name: Z-A</option>
+                    <option value="books_desc" {{ request('sort') === 'books_desc' ? 'selected' : '' }}>Most Books</option>
+                    <option value="books_asc" {{ request('sort') === 'books_asc' ? 'selected' : '' }}>Fewest Books</option>
+                </select>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" class="btn-primary">Apply</button>
+                @if(request()->hasAny(['search', 'sort']))
+                    <a href="{{ route('categories.index') }}" class="btn-secondary">Clear</a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($categories as $category)
-            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="bg-white rounded-lg shadow-sm border border-parchment-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <div class="flex justify-between items-start">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 mb-2">
-                            <div class="w-12 h-12 bg-gold-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <div class="w-12 h-12 bg-gold-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg class="w-6 h-6 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
@@ -61,16 +90,27 @@
                         @endif
                     @endauth
                 </div>
-                <a href="{{ route('categories.show', $category) }}"
-                   class="mt-4 block w-full text-center btn-secondary">
-                    Browse Books
-                </a>
+                <div class="mt-5 flex gap-3">
+                    <a href="{{ route('categories.show', $category) }}"
+                       class="flex-1 text-center btn-primary">
+                        Browse Books
+                    </a>
+                    <a href="{{ route('books.index', ['category' => $category->id]) }}"
+                       class="btn-secondary px-4" title="Open in catalog">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         @empty
             <div class="col-span-full">
-                <x-alert type="info">No categories found.</x-alert>
+                <div class="bg-white border border-parchment-200 rounded-lg p-10 text-center">
+                    <p class="font-heading text-xl font-semibold text-ink-900">No categories found</p>
+                    <p class="text-ink-400 mt-2">Try a different search term.</p>
+                </div>
             </div>
         @endforelse
     </div>
-    <div class="mt-8">{{ $categories->links() }}</div>
+    <div class="mt-8">{{ $categories->withQueryString()->links() }}</div>
 @endsection

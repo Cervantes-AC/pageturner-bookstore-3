@@ -13,9 +13,13 @@ use App\Models\Book;
 use App\Models\Category;
 use App\Models\ImportLog;
 use App\Models\ExportLog;
+use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelWriter;
 
 class ImportExportController extends Controller
 {
@@ -28,7 +32,7 @@ class ImportExportController extends Controller
     public function importBooks(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt',
             'update_existing' => 'nullable|boolean',
         ]);
 
@@ -48,7 +52,7 @@ class ImportExportController extends Controller
         $import = new BooksImport($importLog, $request->boolean('update_existing'));
 
         try {
-            Excel::import($import, storage_path('app/' . $path));
+            Excel::import($import, Storage::disk('local')->path($path));
 
             $failures = $import->failures();
             $failureRows = collect($failures)->map(fn($f) => [
@@ -59,28 +63,29 @@ class ImportExportController extends Controller
 
             $importLog->update([
                 'status' => $failures->isNotEmpty() ? 'completed_with_errors' : 'completed',
+                'total_rows' => $importLog->processed_rows + $failureRows->count(),
                 'failures' => $failureRows,
                 'failed_rows' => $failureRows->count(),
             ]);
 
-            $message = 'Import completed. ' . $failureRows->count() . ' failures.';
+            $message = 'Import completed. ' . $failureRows->count() . ' failures.' . $this->failureSummary($failureRows);
         } catch (\Exception $e) {
             $importLog->update([
                 'status' => 'failed',
                 'failures' => [['error' => $e->getMessage()]],
             ]);
-            $message = 'Import failed: ' . $e->getMessage();
+            $message = 'Book import failed: ' . $e->getMessage();
         }
 
         return redirect()->route('admin.import-export.import')
-            ->with('success', $message);
+            ->with($importLog->status === 'failed' ? 'error' : 'success', $message);
     }
 
     public function downloadTemplate()
     {
-        $headers = ['isbn', 'title', 'author', 'price', 'stock', 'category', 'description'];
+        $headers = ['isbn', 'title', 'author', 'price', 'stock', 'category', 'format', 'description'];
         $sampleData = [
-            ['978-0-1234-5678-9', 'Sample Book', 'Author Name', '19.99', '10', 'Fiction', 'A sample book description.'],
+            ['978-0-1234-5678-9', 'Sample Book', 'Author Name', '19.99', '10', 'Fiction', 'paperback', 'A sample book description.'],
         ];
 
         return Excel::download(
@@ -104,6 +109,19 @@ class ImportExportController extends Controller
 
     public function exportBooks(Request $request)
     {
+        // Increase execution time for large exports
+        set_time_limit(300);
+
+        $request->validate([
+            'format' => ['nullable', Rule::in(['xlsx', 'csv'])],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'min:0'],
+            'stock_status' => ['nullable', Rule::in(['in_stock', 'out_of_stock'])],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
         $filters = $request->only(['category_id', 'min_price', 'max_price', 'stock_status', 'date_from', 'date_to']);
         $format = $request->input('format', 'xlsx');
 
@@ -118,24 +136,38 @@ class ImportExportController extends Controller
         $export = new BooksExport($filters);
         $fileName = 'books-export-' . now()->format('Y-m-d-His') . '.' . $format;
 
-        if ($format === 'csv') {
-            Excel::store($export, $fileName, 'public', \Maatwebsite\Excel\Excel::CSV);
-        } else {
-            Excel::store($export, $fileName, 'public');
+        try {
+            Excel::store($export, $fileName, 'public', $this->writerType($format));
+
+            $exportLog->update([
+                'status' => 'completed',
+                'file_path' => $fileName,
+            ]);
+
+            return redirect()->route('admin.import-export.exports')
+                ->with('success', 'Book export completed!');
+        } catch (\Exception $e) {
+            $exportLog->update(['status' => 'failed']);
+
+            return redirect()->route('admin.import-export.export')
+                ->with('error', 'Book export failed: ' . $e->getMessage());
         }
-
-        $exportLog->update([
-            'status' => 'completed',
-            'file_path' => $fileName,
-        ]);
-
-        return redirect()->route('admin.import-export.exports')
-            ->with('success', 'Export completed!');
     }
 
     // ─── Order Export ─────────────────────────────────────────────
     public function exportOrders(Request $request)
     {
+        // Increase execution time for large exports
+        set_time_limit(300);
+
+        $request->validate([
+            'format' => ['nullable', Rule::in(['xlsx', 'csv'])],
+            'status' => ['nullable', Rule::in(['pending', 'processing', 'completed', 'cancelled'])],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'user_id' => ['nullable', 'exists:users,id'],
+        ]);
+
         $filters = $request->only(['status', 'date_from', 'date_to', 'user_id']);
         $format = $request->input('format', 'xlsx');
 
@@ -149,22 +181,29 @@ class ImportExportController extends Controller
 
         $export = new OrdersExport($filters);
         $fileName = 'orders-export-' . now()->format('Y-m-d-His') . '.' . $format;
-        Excel::store($export, $fileName, 'public');
+        try {
+            Excel::store($export, $fileName, 'public', $this->writerType($format));
 
-        $exportLog->update([
-            'status' => 'completed',
-            'file_path' => $fileName,
-        ]);
+            $exportLog->update([
+                'status' => 'completed',
+                'file_path' => $fileName,
+            ]);
 
-        return redirect()->route('admin.import-export.exports')
-            ->with('success', 'Order export completed!');
+            return redirect()->route('admin.import-export.exports')
+                ->with('success', 'Order export completed!');
+        } catch (\Exception $e) {
+            $exportLog->update(['status' => 'failed']);
+
+            return redirect()->route('admin.import-export.export')
+                ->with('error', 'Order export failed: ' . $e->getMessage());
+        }
     }
 
     // ─── User Import ──────────────────────────────────────────────
     public function importUsers(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt',
         ]);
 
         $file = $request->file('file');
@@ -179,17 +218,48 @@ class ImportExportController extends Controller
         ]);
 
         $import = new UsersImport($importLog);
-        Excel::import($import, storage_path('app/' . $path));
 
-        $importLog->update(['status' => 'completed']);
+        try {
+            Excel::import($import, Storage::disk('local')->path($path));
+
+            $failures = $import->failures();
+            $failureRows = collect($failures)->map(fn($f) => [
+                'row' => $f->row(),
+                'attribute' => $f->attribute(),
+                'errors' => $f->errors(),
+            ]);
+
+            $importLog->update([
+                'status' => $failures->isNotEmpty() ? 'completed_with_errors' : 'completed',
+                'total_rows' => $importLog->processed_rows + $failureRows->count(),
+                'failures' => $failureRows,
+                'failed_rows' => $failureRows->count(),
+            ]);
+
+            $message = 'User import completed. ' . $failureRows->count() . ' failures.' . $this->failureSummary($failureRows);
+        } catch (\Exception $e) {
+            $importLog->update([
+                'status' => 'failed',
+                'failures' => [['error' => $e->getMessage()]],
+            ]);
+            $message = 'User import failed: ' . $e->getMessage();
+        }
 
         return redirect()->route('admin.import-export.import')
-            ->with('success', 'User import completed!');
+            ->with($importLog->status === 'failed' ? 'error' : 'success', $message);
     }
 
     // ─── User Export ──────────────────────────────────────────────
     public function exportUsers(Request $request)
     {
+        // Increase execution time for large exports
+        set_time_limit(300);
+
+        $request->validate([
+            'format' => ['nullable', Rule::in(['xlsx', 'csv'])],
+            'redact_pii' => ['nullable', 'boolean'],
+        ]);
+
         $redactPii = $request->boolean('redact_pii');
         $format = $request->input('format', 'xlsx');
 
@@ -203,21 +273,31 @@ class ImportExportController extends Controller
 
         $export = new UsersExport($redactPii);
         $fileName = 'users-export-' . now()->format('Y-m-d-His') . '.' . $format;
-        Excel::store($export, $fileName, 'public');
+        try {
+            Excel::store($export, $fileName, 'public', $this->writerType($format));
 
-        $exportLog->update([
-            'status' => 'completed',
-            'file_path' => $fileName,
-        ]);
+            $exportLog->update([
+                'status' => 'completed',
+                'file_path' => $fileName,
+            ]);
 
-        return redirect()->route('admin.import-export.exports')
-            ->with('success', 'User export completed!');
+            return redirect()->route('admin.import-export.exports')
+                ->with('success', 'User export completed!');
+        } catch (\Exception $e) {
+            $exportLog->update(['status' => 'failed']);
+
+            return redirect()->route('admin.import-export.export')
+                ->with('error', 'User export failed: ' . $e->getMessage());
+        }
     }
 
     // ─── Download Export ─────────────────────────────────────────
     public function downloadExport(ExportLog $exportLog)
     {
-        return response()->download(storage_path('app/public/' . $exportLog->file_path));
+        abort_if($exportLog->status !== 'completed' || !$exportLog->file_path, 404);
+        abort_if(!Storage::disk('public')->exists($exportLog->file_path), 404);
+
+        return Storage::disk('public')->download($exportLog->file_path);
     }
 
     // ─── Export Logs ─────────────────────────────────────────────
@@ -263,9 +343,11 @@ class ImportExportController extends Controller
 
         $export = new OrdersExport($filters);
         $fileName = 'my-orders-' . now()->format('Y-m-d-His') . '.' . $format;
-        Excel::store($export, $fileName, 'public');
+        Excel::store($export, $fileName, 'public', $this->writerType($format));
 
-        return response()->download(storage_path('app/public/' . $fileName));
+        abort_if(!Storage::disk('public')->exists($fileName), 404);
+
+        return Storage::disk('public')->download($fileName);
     }
 
     public function downloadInvoice(Order $order)
@@ -277,5 +359,22 @@ class ImportExportController extends Controller
         $order->load('orderItems.book', 'user');
         $pdf = Pdf::loadView('admin.import-export.invoice', compact('order'));
         return $pdf->download('invoice-' . $order->id . '.pdf');
+    }
+
+    private function writerType(string $format): string
+    {
+        return $format === 'csv' ? ExcelWriter::CSV : ExcelWriter::XLSX;
+    }
+
+    private function failureSummary($failureRows): string
+    {
+        if ($failureRows->isEmpty()) {
+            return '';
+        }
+
+        $first = $failureRows->first();
+        $errors = implode(' ', $first['errors'] ?? []);
+
+        return " First failure: row {$first['row']} ({$first['attribute']}) - {$errors}";
     }
 }

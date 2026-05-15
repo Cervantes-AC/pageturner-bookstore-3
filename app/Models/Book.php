@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 
 class Book extends Model
@@ -50,9 +51,22 @@ class Book extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function getCoverUrlAttribute(): string
+    {
+        if (!$this->cover_image) {
+            return '';
+        }
+        if (Str::startsWith($this->cover_image, ['http://', 'https://'])) {
+            return $this->cover_image;
+        }
+        return asset('storage/' . $this->cover_image);
+    }
+
     public function getAverageRatingAttribute()
     {
-        return $this->reviews()->avg('rating') ?? 0;
+        return $this->relationLoaded('reviews')
+            ? ($this->reviews->avg('rating') ?? 0)
+            : ($this->reviews()->avg('rating') ?? 0);
     }
 
     protected function serializeDate(\DateTimeInterface $date): string

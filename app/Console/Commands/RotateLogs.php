@@ -15,15 +15,30 @@ class RotateLogs extends Command
         $logPath = storage_path('logs');
         $files = glob($logPath . '/*.log');
 
+        if ($files === false) {
+            $this->error('Failed to read log directory.');
+            return Command::FAILURE;
+        }
+
         $archived = 0;
         foreach ($files as $file) {
             if (basename($file) === 'laravel.log') continue;
             $info = pathinfo($file);
             $gzFile = $info['dirname'] . '/' . $info['filename'] . '.gz';
             if (!file_exists($gzFile)) {
-                $gzData = gzencode(file_get_contents($file), 9);
-                file_put_contents($gzFile, $gzData);
-                unlink($file);
+                $content = file_get_contents($file);
+                if ($content === false) {
+                    $this->warn("Could not read: {$file}");
+                    continue;
+                }
+                $gzData = gzencode($content, 9);
+                if (file_put_contents($gzFile, $gzData) === false) {
+                    $this->warn("Could not write: {$gzFile}");
+                    continue;
+                }
+                if (!unlink($file)) {
+                    $this->warn("Could not remove: {$file}");
+                }
                 $archived++;
             }
         }

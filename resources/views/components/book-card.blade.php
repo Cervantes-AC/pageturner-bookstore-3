@@ -3,7 +3,7 @@
     <div class="card h-full flex flex-col bg-white">
         <div class="relative h-64 bg-gradient-to-br from-parchment-100 to-parchment-200 flex items-center justify-center overflow-hidden">
             @if($book->cover_image)
-                <img src="{{ asset('storage/' . $book->cover_image) }}"
+                <img src="{{ $book->cover_url }}"
                      alt="{{ $book->title }}" 
                      class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500">
             @else

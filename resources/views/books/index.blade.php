@@ -6,97 +6,42 @@
 @endsection
 
 @section('content')
-    {{-- Search & Filter --}}
-    <div class="card mb-8">
-        <div class="px-6 py-5 border-b border-parchment-200">
-            <div class="flex items-center justify-between">
-                <h2 class="font-heading text-xl font-bold text-ink-900">Filter & Search</h2>
-                <svg class="w-6 h-6 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
+    <div class="mb-8 bg-white border border-parchment-200 rounded-lg p-5 shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <p class="text-sm font-semibold text-gold-700 uppercase tracking-wider">Catalog</p>
+                <h2 class="font-heading text-2xl font-bold text-ink-900 mt-1">Browse the Shelf</h2>
+                <p class="text-ink-400 mt-1">Search, narrow by category, and sort the collection without leaving the page.</p>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="px-4 py-3 bg-parchment-50 rounded-lg border border-parchment-200">
+                    <div class="font-heading text-xl font-bold text-ink-900">{{ $books->total() }}</div>
+                    <div class="text-xs text-ink-400">Results</div>
+                </div>
+                <div class="px-4 py-3 bg-parchment-50 rounded-lg border border-parchment-200">
+                    <div class="font-heading text-xl font-bold text-ink-900">{{ $categories->count() }}</div>
+                    <div class="text-xs text-ink-400">Genres</div>
+                </div>
+                <div class="px-4 py-3 bg-parchment-50 rounded-lg border border-parchment-200">
+                    <div class="font-heading text-xl font-bold text-ink-900">{{ $years->count() }}</div>
+                    <div class="text-xs text-ink-400">Years</div>
+                </div>
             </div>
         </div>
-
-        <form action="{{ route('books.index') }}" method="GET" class="p-6">
-            <div class="mb-6">
-                <label class="block text-ink-700 text-sm font-semibold mb-3">Search Books</label>
-                <div class="relative">
-                    <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Search by title, author, or ISBN..."
-                        class="input-field pl-12">
-                    <svg class="w-5 h-5 text-parchment-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div>
-                    <label class="block text-ink-700 text-sm font-semibold mb-3">Category</label>
-                    <select name="category" class="input-field">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-ink-700 text-sm font-semibold mb-3">Sort By</label>
-                    <select name="sort" class="input-field">
-                        <option value="">Default</option>
-                        <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
-                        <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
-                        <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Title: A-Z</option>
-                        <option value="title_desc" {{ request('sort') == 'title_desc' ? 'selected' : '' }}>Title: Z-A</option>
-                        <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
-                        <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-ink-700 text-sm font-semibold mb-3">Publication Year</label>
-                    <select name="year" class="input-field">
-                        <option value="">All Years</option>
-                        @foreach($years as $year)
-                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
-                                {{ $year }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-ink-700 text-sm font-semibold mb-3">Price Range (&#x20B1;)</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="min_price" value="{{ request('min_price') }}"
-                           step="0.01" min="0" placeholder="Min (&#x20B1;0.00)"
-                           class="input-field">
-                    <input type="number" name="max_price" value="{{ request('max_price') }}"
-                           step="0.01" min="0" placeholder="Max (&#x20B1;9999.99)"
-                           class="input-field">
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <button type="submit" class="flex-1 btn-primary">
-                    Apply Filters
-                </button>
-                @if(request()->hasAny(['search', 'category', 'year', 'min_price', 'max_price', 'sort']))
-                    <a href="{{ route('books.index') }}" class="btn-secondary">
-                        Clear All
-                    </a>
-                @endif
-            </div>
-        </form>
     </div>
 
+    @include('books.partials.filter-panel', [
+        'action' => route('books.index'),
+        'clearUrl' => route('books.index'),
+        'showCategory' => true,
+        'books' => $books,
+        'categories' => $categories,
+        'years' => $years,
+    ])
+
     {{-- Active Filters Summary --}}
-    @if(request()->hasAny(['search', 'category', 'year', 'min_price', 'max_price']))
-        <div class="bg-gold-50 border border-gold-200 rounded-xl p-5 mb-8">
+    @if(request()->hasAny(['search', 'category', 'year', 'min_price', 'max_price', 'stock_status']))
+        <div class="bg-gold-50 border border-gold-200 rounded-lg p-5 mb-8">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div class="flex flex-wrap gap-2 items-center">
                     <span class="text-gold-800 font-semibold flex items-center">
@@ -130,6 +75,11 @@
                             Max: &#x20B1;{{ number_format(request('max_price'), 2) }}
                         </span>
                     @endif
+                    @if(request('stock_status'))
+                        <span class="badge bg-white text-gold-800 border border-gold-300">
+                            {{ request('stock_status') === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
+                        </span>
+                    @endif
                 </div>
                 <span class="badge badge-gold text-base">{{ $books->total() }} result(s)</span>
             </div>
@@ -145,7 +95,7 @@
         </div>
         <div class="mt-10">{{ $books->withQueryString()->links() }}</div>
     @else
-        <div class="bg-white border border-parchment-200 rounded-xl p-12 text-center">
+        <div class="bg-white border border-parchment-200 rounded-lg p-12 text-center">
             <svg class="w-20 h-20 text-parchment-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>

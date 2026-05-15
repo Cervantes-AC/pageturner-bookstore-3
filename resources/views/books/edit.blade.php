@@ -77,7 +77,7 @@
                 <label class="block text-ink-700 font-medium mb-2">Cover Image</label>
                 @if($book->cover_image)
                     <div class="mb-3">
-                        <img src="{{ asset('storage/' . $book->cover_image) }}"
+                        <img src="{{ $book->cover_url }}"
                              class="h-32 object-cover rounded-xl shadow-sm" alt="Current cover">
                         <p class="text-sm text-ink-400 mt-2">Upload a new image to replace the current one</p>
                     </div>

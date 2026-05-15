@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Book;
+use App\Models\Category;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,17 +12,25 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
+    protected $categoryCache = [];
 
     public function __construct(array $filters = [])
     {
         $this->filters = $filters;
+        // Pre-load all categories into memory once
+        $this->categoryCache = Category::pluck('name', 'id')->toArray();
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
     public function query()
     {
         $query = Book::query()
-            ->select(['isbn', 'title', 'author', 'price', 'format', 'stock_quantity', 'category_id', 'description', 'created_at'])
-            ->with('category:id,name');
+            ->select(['id', 'isbn', 'title', 'author', 'price', 'format', 'stock_quantity', 'category_id', 'description', 'created_at'])
+            ->where('is_active', true);
 
         if (!empty($this->filters['category_id'])) {
             $query->where('category_id', $this->filters['category_id']);
@@ -40,13 +49,12 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
             }
         }
         if (!empty($this->filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $this->filters['date_from']);
+            $query->where('created_at', '>=', $this->filters['date_from'] . ' 00:00:00');
         }
         if (!empty($this->filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $this->filters['date_to']);
+            $query->where('created_at', '<=', $this->filters['date_to'] . ' 23:59:59');
         }
 
-        $query->where('is_active', true);
         $query->orderBy('id');
         return $query;
     }
@@ -75,14 +83,9 @@ class BooksExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
             $book->price,
             $book->format ?? 'N/A',
             $book->stock_quantity,
-            $book->category->name ?? 'N/A',
+            $this->categoryCache[$book->category_id] ?? 'N/A',
             $book->description,
             $book->created_at->format('Y-m-d H:i:s'),
         ];
-    }
-
-    public function chunkSize(): int
-    {
-        return 2000;
     }
 }

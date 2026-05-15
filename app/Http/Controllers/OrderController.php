@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\OrderService;
 use App\Notifications\OrderPlaced;
 use App\Notifications\OrderStatusChanged;
 use App\Notifications\NewOrderAdmin;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(private OrderService $orderService) {}
+
     public function index()
     {
         $orders = auth()->user()->isAdmin()
@@ -34,51 +37,27 @@ class OrderController extends Controller
             'shipping_address' => 'required|string|max:1000',
         ]);
 
-        $total = 0;
-        $orderItems = [];
+        try {
+            $order = $this->orderService->createOrder(
+                auth()->id(),
+                $request->items,
+                $request->only(['shipping_name', 'shipping_phone', 'shipping_address'])
+            );
 
-        foreach ($request->items as $item) {
-            $book = Book::findOrFail($item['book_id']);
+            session()->forget('cart');
 
-            if ($book->stock_quantity < $item['quantity']) {
-                return back()->with('error', "Not enough stock for: {$book->title}");
-            }
+            $this->orderService->sendOrderNotifications($order);
 
-            $subtotal = $book->price * $item['quantity'];
-            $total += $subtotal;
+            return redirect()->route('orders.show', $order)
+                ->with('success', 'Order placed successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order creation failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
 
-            $orderItems[] = [
-                'book_id' => $book->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $book->price,
-            ];
+            return back()->with('error', $e->getMessage() ?: 'Failed to place order. Please try again.');
         }
-
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'total_amount' => $total,
-            'status' => 'pending',
-            'shipping_name' => $request->shipping_name,
-            'shipping_phone' => $request->shipping_phone,
-            'shipping_address' => $request->shipping_address,
-        ]);
-
-        foreach ($orderItems as $item) {
-            $order->orderItems()->create($item);
-            Book::find($item['book_id'])->decrement('stock_quantity', $item['quantity']);
-        }
-
-        session()->forget('cart');
-
-        auth()->user()->notify(new OrderPlaced($order));
-
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new NewOrderAdmin($order));
-        }
-
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'Order placed successfully!');
     }
 
     public function show(Order $order)
@@ -101,9 +80,7 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,completed,cancelled',
         ]);
 
-        $order->update(['status' => $request->status]);
-
-        $order->user->notify(new OrderStatusChanged($order));
+        $this->orderService->updateOrderStatus($order, $request->status);
 
         return back()->with('success', 'Order status updated!');
     }

@@ -20,6 +20,7 @@ class BookCatalogLoadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['rate-limiting.tiers.public.limit' => 1000]);
         $this->repository = app(BookRepository::class);
 
         // Seed minimal data for tests
@@ -41,7 +42,7 @@ class BookCatalogLoadTest extends TestCase
                 'data' => [
                     '*' => ['id', 'isbn', 'title', 'author', 'price', 'format', 'category']
                 ],
-                'meta' => ['path', 'per_page', 'next_cursor', 'prev_cursor']
+                'meta' => ['path', 'perPage', 'nextCursor', 'prevCursor']
             ]);
         }
     }
@@ -116,16 +117,16 @@ class BookCatalogLoadTest extends TestCase
                     'author',
                     'price',
                     'format',
-                    'stock_quantity',
-                    'cover_image',
+                    'stockQuantity',
+                    'coverImage',
                     'category' => ['id', 'name'],
                 ],
             ],
             'meta' => [
                 'path',
-                'per_page',
-                'next_cursor',
-                'prev_cursor',
+                'perPage',
+                'nextCursor',
+                'prevCursor',
             ],
         ]);
     }

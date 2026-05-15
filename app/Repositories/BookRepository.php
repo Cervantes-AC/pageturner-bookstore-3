@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Book;
 use App\Services\BookCacheService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\CursorPaginator;
 
 class BookRepository
@@ -60,17 +61,24 @@ class BookRepository
 
     public function searchByFulltext(string $query, int $perPage = 50): CursorPaginator
     {
-        return Book::select($this->catalogFields)
+        $books = Book::select($this->catalogFields)
             ->with(['category:id,name'])
-            ->where('is_active', true)
-            ->whereRaw(
-                'MATCH(title, description) AGAINST(? IN BOOLEAN MODE)',
-                [$query . '*']
-            )
-            ->orderByRaw(
-                'MATCH(title, description) AGAINST(? IN BOOLEAN MODE) DESC',
-                [$query . '*']
-            )
+            ->where('is_active', true);
+
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return $books
+                ->where(function ($builder) use ($query) {
+                    $builder->where('title', 'like', "%{$query}%")
+                        ->orWhere('description', 'like', "%{$query}%");
+                })
+                ->orderBy('published_at', 'desc')
+                ->orderBy('id', 'desc')
+                ->cursorPaginate($perPage);
+        }
+
+        return $books
+            ->whereRaw('MATCH(title, description) AGAINST(? IN BOOLEAN MODE)', [$query . '*'])
+            ->orderByRaw('MATCH(title, description) AGAINST(? IN BOOLEAN MODE) DESC', [$query . '*'])
             ->cursorPaginate($perPage);
     }
 

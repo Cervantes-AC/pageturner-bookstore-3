@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::table('books', function (Blueprint $table) {
             $table->index(['category_id', 'published_at', 'is_active'], 'idx_books_catalog_filter');
             $table->index(['price', 'stock_quantity', 'id'], 'idx_books_price_stock');
-            $table->fullText(['title', 'description'], 'idx_books_fulltext');
+            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                $table->fullText(['title', 'description'], 'idx_books_fulltext');
+            }
             $table->index('is_active', 'idx_books_active');
             $table->index('isbn', 'idx_books_isbn_lookup');
         });
@@ -22,7 +24,9 @@ return new class extends Migration
         Schema::table('books', function (Blueprint $table) {
             $table->dropIndex('idx_books_catalog_filter');
             $table->dropIndex('idx_books_price_stock');
-            $table->dropFullText('idx_books_fulltext');
+            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                $table->dropFullText('idx_books_fulltext');
+            }
             $table->dropIndex('idx_books_active');
             $table->dropIndex('idx_books_isbn_lookup');
         });

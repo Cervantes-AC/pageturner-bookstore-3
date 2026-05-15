@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="font-heading text-3xl font-bold text-ink-900">Backup Management</h2>
-            <p class="text-ink-400 mt-1">Automated backup monitoring and control</p>
+            <p class="text-ink-400 mt-1">Database backup monitoring and control</p>
         </div>
         <form action="{{ route('admin.backup.run') }}" method="POST" class="inline">
             @csrf
@@ -20,6 +20,38 @@
 @endsection
 
 @section('content')
+    {{-- Database Connection Status --}}
+    @if(isset($dbStatus))
+        @if($dbStatus['connected'])
+            <div class="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-emerald-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-emerald-700 font-medium">Database connection is healthy</span>
+                </div>
+            </div>
+        @else
+            <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <div>
+                        <p class="text-red-700 font-medium">Database connection failed</p>
+                        <p class="text-red-600 text-sm mt-1">{{ $dbStatus['error'] }}</p>
+                        <p class="text-red-600 text-sm mt-2">Backups cannot run until the database connection is restored. Please check:</p>
+                        <ul class="text-red-600 text-sm mt-2 ml-4 list-disc">
+                            <li>MySQL server is running</li>
+                            <li>Database credentials in .env file are correct</li>
+                            <li>Network connectivity to database host</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
+
     {{-- Backup Status --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
@@ -51,6 +83,7 @@
                     <th class="text-left px-4 py-3 font-medium text-ink-400">Size</th>
                     <th class="text-left px-4 py-3 font-medium text-ink-400">Disk</th>
                     <th class="text-left px-4 py-3 font-medium text-ink-400">Date</th>
+                    <th class="text-left px-4 py-3 font-medium text-ink-400">Download</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-parchment-200">
@@ -74,10 +107,19 @@
                     </td>
                     <td class="px-4 py-3 text-ink-400">{{ $backup->disk }}</td>
                     <td class="px-4 py-3 text-ink-400">{{ $backup->created_at->format('Y-m-d H:i') }}</td>
+                    <td class="px-4 py-3">
+                        @if($backup->status === 'success' && $backup->file_path)
+                            <a href="{{ route('admin.backup.download', $backup) }}" class="text-gold-600 hover:text-gold-700 font-medium">
+                                Download
+                            </a>
+                        @else
+                            <span class="text-ink-300">N/A</span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-ink-400">No backup records found.</td>
+                    <td colspan="6" class="px-4 py-8 text-center text-ink-400">No backup records found.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -90,7 +132,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div class="bg-white rounded-lg p-3 shadow-sm">
                 <span class="font-medium text-ink-700">Daily:</span>
-                <span class="text-ink-400"> Full backup at 2:00 AM</span>
+                <span class="text-ink-400"> Database backup at 2:00 AM</span>
             </div>
             <div class="bg-white rounded-lg p-3 shadow-sm">
                 <span class="font-medium text-ink-700">Retention:</span>

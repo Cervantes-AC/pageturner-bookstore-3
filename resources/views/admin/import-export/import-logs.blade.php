@@ -38,6 +38,21 @@
                     <td class="px-4 py-3 text-ink-400">{{ $import->user->name ?? 'System' }}</td>
                     <td class="px-4 py-3 text-ink-400">{{ $import->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
+                @if($import->failed_rows > 0 && !empty($import->failures))
+                    <tr class="bg-orange-50">
+                        <td colspan="7" class="px-4 py-3 text-xs text-orange-800">
+                            @foreach(array_slice($import->failures, 0, 5) as $failure)
+                                <div>
+                                    Row {{ $failure['row'] ?? '?' }}
+                                    @if(!empty($failure['attribute']))
+                                        ({{ $failure['attribute'] }})
+                                    @endif
+                                    - {{ implode(' ', $failure['errors'] ?? [$failure['error'] ?? 'Import row failed.']) }}
+                                </div>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
                 @empty
                 <tr>
                     <td colspan="7" class="px-4 py-8 text-center text-ink-400">No imports yet.</td>

@@ -21,5 +21,8 @@ class AuthServiceProvider extends ServiceProvider
         Review::class => ReviewPolicy::class,
     ];
 
-    public function boot(): void {}
+    public function boot(): void
+    {
+        $this->registerPolicies();
+    }
 }

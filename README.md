@@ -4,79 +4,137 @@
 - **Name:** Aaron Clyde C. Cervantes
 - **Course:** Bachelor of Science in Information Technology
 - **University:** Central Mindanao University
-- **Activity:** Laboratory Activity 3 - Routing, Controllers, Views, Blade Templating, and Database Operations
+- **Activity:** Laboratory Activity 6 - Advanced Laravel Features & Enterprise-Grade Bookstore System
 
 ## Project Description
-PageTurner is a comprehensive online bookstore management system built with Laravel. This full-featured web application demonstrates advanced Laravel concepts including routing, controllers, views, Blade templating, database operations, and user authentication. The system serves both administrators and customers with distinct functionalities for managing books, categories, orders, and reviews.
+PageTurner is a comprehensive, enterprise-grade online bookstore management system built with Laravel 12. This full-featured web application demonstrates advanced Laravel concepts including routing, controllers, views, Blade templating, database operations, user authentication, and modern enterprise features. The system serves both administrators and customers with distinct functionalities for managing books, categories, orders, reviews, auditing, backups, and analytics.
 
 ## Learning Objectives Achieved
-### Routing & HTTP Methods
-- ✅ Defined routes using GET, POST, PUT, PATCH, and DELETE methods
-- ✅ Implemented route parameters with constraints
-- ✅ Created named routes, route prefixes, and route grouping
-- ✅ Applied middleware for authentication and authorization
+### Core Laravel Concepts
+- ✅ Advanced routing with grouping, middleware, and resource controllers
+- ✅ Complex controller architecture with admin and customer separation
+- ✅ Blade templating with components, inheritance, and slots
+- ✅ Database migrations with relationships and constraints
+- ✅ Eloquent ORM with complex queries and relationships
+- ✅ Database seeders and factories for test data
 
-### Controllers
-- ✅ Generated controllers using Artisan commands
-- ✅ Bound routes to controller methods
-- ✅ Implemented resource controllers for CRUD operations
-- ✅ Applied proper validation and error handling
-
-### Views & Blade Templating
-- ✅ Used Blade syntax and directives (@if, @foreach, @extends, @yield, @section, @include)
-- ✅ Passed data from controllers to views using compact() and with()
-- ✅ Created layout templates and reusable partial views
-- ✅ Implemented Blade components with slots
-
-### Database Operations
-- ✅ Created database migrations for multiple tables
-- ✅ Defined Eloquent models with relationships
-- ✅ Implemented database seeders and factories
-- ✅ Performed CRUD operations using Eloquent ORM
-
-### Authentication
-- ✅ Set up Laravel Breeze for user authentication
-- ✅ Implemented authorization in views using @auth and @guest directives
-- ✅ Created role-based access control (admin/customer)
+### Advanced Features Implemented
+- ✅ Two-factor authentication (2FA) with recovery codes
+- ✅ Email verification system
+- ✅ Role-based access control (RBAC) with admin/customer/premium tiers
+- ✅ API rate limiting with tiered access
+- ✅ Comprehensive audit logging system
+- ✅ Automated backup management with monitoring
+- ✅ Data import/export functionality (Excel)
+- ✅ Full-text search with Laravel Scout
+- ✅ Queue system for background jobs
+- ✅ Redis caching and session management
+- ✅ Scheduled tasks and maintenance commands
 
 ## Features
 
-### User Management
+### User Management & Authentication
 - 👤 User registration and login via Laravel Breeze
-- 🔐 Role-based authentication (Admin/Customer)
-- 📝 User profile management
+- 🔐 Two-factor authentication (2FA) with recovery codes
+- ✉️ Email verification system
+- 🎯 Role-based access control (Admin/Customer/Premium)
+- 📝 User profile management with password changes
 - 🛡️ Protected routes with middleware
+- 📊 User management dashboard (Admin)
 
 ### Book Management (Admin)
 - 📚 Complete CRUD operations for books
 - 🏷️ Category assignment and management
-- 📊 Stock quantity tracking
+- 📊 Stock quantity tracking with low-stock alerts
 - 🖼️ Cover image upload support
-- 📖 Detailed book information (ISBN, author, description)
+- 📖 Detailed book information (ISBN, author, description, pricing)
+- 🔍 Full-text search with Laravel Scout
+- 📈 Book performance analytics
+- 📋 Batch operations and bulk imports
 
 ### Category Management (Admin)
 - 📂 Create, read, update, delete categories
-- 📋 Category descriptions
+- 📋 Category descriptions and metadata
 - 📊 Book count per category
+- 🎨 Category organization and hierarchy
 
 ### Customer Features
-- 🔍 Browse books with search and filtering
-- 📖 View detailed book information
-- ⭐ Read and write book reviews
-- 🛒 Shopping cart functionality (bonus feature)
+- 🔍 Browse books with advanced search and filtering
+- 📖 View detailed book information with ratings
+- ⭐ Read and write book reviews with 5-star ratings
+- 🛒 Shopping cart functionality with persistent storage
 - 📦 Order management and history
+- 💬 Review management (edit/delete own reviews)
+- 🎁 Wishlist functionality (future enhancement)
 
 ### Review System
-- ⭐ 5-star rating system
-- 💬 Written reviews with comments
+- ⭐ 5-star rating system with averages
+- 💬 Written reviews with detailed comments
 - 👤 User-specific review management
 - 📊 Average rating calculations
+- 🔒 Review ownership validation
+
+### Admin Dashboard & Analytics
+- 📊 Comprehensive dashboard with key metrics
+- 📈 Sales analytics and trends
+- 👥 User activity monitoring
+- 📚 Book performance metrics
+- 🎯 Order statistics and insights
+
+### Audit & Compliance
+- 📋 Complete audit logging of all user actions
+- 🔍 Audit trail with timestamps and user information
+- 📊 Audit log export functionality
+- 🔐 Security event tracking
+- 📝 Compliance reporting
+
+### Backup & Data Management
+- 💾 Automated backup system with monitoring
+- 📅 Scheduled backup tasks
+- 🔄 Backup restoration capabilities
+- 📊 Backup monitoring dashboard
+- 🗑️ Cleanup of old backups
+
+### Import/Export Features
+- 📤 Export books, users, orders, and audit logs to Excel
+- 📥 Import books from Excel files
+- 📊 Batch operations with progress tracking
+- 🔍 Import validation and error reporting
+- 📋 Export history and logging
+
+### API Rate Limiting
+- 🚦 Tiered rate limiting (Standard/Premium/Admin)
+- 📊 Rate limit monitoring dashboard
+- 🔧 Configurable rate limits per tier
+- 📈 Usage analytics and tracking
+- ⚠️ Rate limit alerts and notifications
+
+### Queue & Background Jobs
+- ⚙️ Redis-based queue system
+- 📧 Email notifications
+- 🔄 Asynchronous task processing
+- 📊 Job monitoring and logging
+- 🔧 Queue management commands
+
+### Caching & Performance
+- ⚡ Redis caching layer
+- 🔄 Session management with Redis
+- 📊 Cache statistics and monitoring
+- 🎯 Query optimization with eager loading
+- 📈 Performance monitoring
 
 ## Technologies Used
-- **Laravel:** 10.x/11.x
-- **PHP:** 8.1+
-- **Database:** MySQL/SQLite
-- **Authentication:** Laravel Breeze
+- **Laravel:** 12.x
+- **PHP:** 8.2+
+- **Database:** MySQL with read replicas support
+- **Cache/Session:** Redis
+- **Queue System:** Redis-based queues
+- **Search:** Laravel Scout with database driver (Meilisearch optional)
+- **Authentication:** Laravel Breeze with 2FA
+- **File Storage:** Laravel Storage with S3 support
+- **Export:** Maatwebsite Excel
+- **Backup:** Spatie Laravel Backup
+- **PDF Generation:** Laravel DomPDF
 - **Templating:** Blade Template Engine
 - **Frontend:** HTML5, CSS3, Tailwind CSS
 - **Version Control:** Git & GitHub
@@ -84,19 +142,30 @@ PageTurner is a comprehensive online bookstore management system built with Lara
 ## Database Schema
 
 ### Tables Overview
-- **users** - User accounts (customers & admins)
+- **users** - User accounts with roles and 2FA support
 - **categories** - Book categories/genres
 - **books** - Book inventory with category relationships
-- **orders** - Customer orders
+- **orders** - Customer orders with status tracking
 - **order_items** - Individual items in orders
-- **reviews** - Customer book reviews
+- **reviews** - Customer book reviews with ratings
+- **audit_logs** - Complete audit trail of system actions
+- **api_rate_limits** - Rate limiting configuration and tracking
+- **backup_monitoring** - Backup status and monitoring
+- **export_logs** - Export operation history
+- **import_logs** - Import operation history
+- **scheduled_tasks** - Scheduled task tracking
+- **sessions** - User session data (Redis)
+- **cache** - Application cache (Redis)
+- **jobs** - Queue job tracking (Redis)
 
 ### Key Relationships
-- User hasMany Orders, Reviews
+- User hasMany Orders, Reviews, AuditLogs
 - Category hasMany Books
 - Book belongsTo Category, hasMany Reviews, OrderItems
 - Order belongsTo User, hasMany OrderItems
 - Review belongsTo User, Book
+- AuditLog belongsTo User
+- OrderItem belongsTo Order, Book
 
 ## Installation Instructions
 

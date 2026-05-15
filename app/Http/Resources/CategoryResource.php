@@ -12,7 +12,7 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'slug' => $this->slug ?? str($this->name)->slug(),
+            'slug' => str($this->name)->slug(),
             'description' => $this->description,
             'books_count' => $this->when($this->books_count !== null, $this->books_count),
             'created_at' => $this->created_at,

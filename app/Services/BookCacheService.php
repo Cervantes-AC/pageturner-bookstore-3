@@ -22,36 +22,33 @@ class BookCacheService
 
     public function rememberCatalog(int $page, Closure $callback): mixed
     {
-        return Cache::tags(['books:catalog'])
-            ->remember(
-                self::CATALOG_CACHE_KEY . ":page:{$page}",
-                self::CACHE_TTL,
-                $callback
-            );
+        return Cache::remember(
+            self::CATALOG_CACHE_KEY . ":page:{$page}",
+            self::CACHE_TTL,
+            $callback
+        );
     }
 
     public function rememberCategoryCatalog(int $categoryId, int $page, Closure $callback): mixed
     {
-        return Cache::tags(["category:{$categoryId}"])
-            ->remember(
-                "category:{$categoryId}:catalog:page:{$page}",
-                self::CACHE_TTL,
-                $callback
-            );
+        return Cache::remember(
+            "category:{$categoryId}:catalog:page:{$page}",
+            self::CACHE_TTL,
+            $callback
+        );
     }
 
     public function invalidateCatalog(): void
     {
-        if (Cache::supportsTags()) {
-            Cache::tags(['books:catalog'])->flush();
-        }
+        Cache::forget(self::CATALOG_CACHE_KEY . ':invalidate');
+        Cache::increment(self::CATALOG_CACHE_KEY . ':version');
     }
 
     public function invalidateCategory(int $categoryId): void
     {
-        if (Cache::supportsTags()) {
-            Cache::tags(["category:{$categoryId}"])->flush();
-        }
+        $prefix = "category:{$categoryId}";
+        Cache::forget("{$prefix}:invalidate");
+        Cache::increment("{$prefix}:version");
     }
 
     public function invalidateIsbn(string $isbn): void
@@ -61,14 +58,11 @@ class BookCacheService
 
     public function warmCategoryPopular(int $categoryId, array $books): void
     {
-        if (Cache::supportsTags()) {
-            Cache::tags(["category:{$categoryId}"])
-                ->put(
-                    "category:{$categoryId}:popular",
-                    $books,
-                    7200
-                );
-        }
+        Cache::put(
+            "category:{$categoryId}:popular",
+            $books,
+            7200
+        );
     }
 
     public function getCategoryPopular(int $categoryId): mixed

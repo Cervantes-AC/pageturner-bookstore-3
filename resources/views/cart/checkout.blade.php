@@ -89,7 +89,7 @@
                             <div class="flex items-start gap-3">
                                 <div class="w-16 h-20 bg-gradient-to-br from-parchment-100 to-parchment-200 rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
                                     @if($item['book']->cover_image)
-                                        <img src="{{ asset('storage/' . $item['book']->cover_image) }}"
+                                        <img src="{{ $item['book']->cover_url }}"
                                              alt="{{ $item['book']->title }}" class="h-full object-contain">
                                     @else
                                         <svg class="w-8 h-8 text-parchment-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

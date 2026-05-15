@@ -12,7 +12,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Illuminate\Validation\Rule;
 
 class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnFailure
 {
@@ -27,11 +26,14 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
 
     public function model(array $row)
     {
+        $this->importLog->increment('processed_rows');
+
         return new User([
             'name' => $row['name'],
             'email' => $row['email'],
             'password' => Hash::make($row['password'] ?? 'password'),
             'role' => $row['role'] ?? 'customer',
+            'email_verified_at' => now(),
         ]);
     }
 
@@ -40,7 +42,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'nullable|in:admin,customer',
+            'password' => 'nullable|string|min:6',
+            'role' => 'nullable|in:admin,customer,premium',
         ];
     }
 

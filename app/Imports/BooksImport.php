@@ -12,7 +12,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Illuminate\Validation\Rule;
 
 class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnFailure
 {
@@ -29,12 +28,18 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
 
     public function model(array $row)
     {
-        $category = Category::where('name', $row['category'])->first();
+        $this->importLog->increment('processed_rows');
+
+        $category = Category::firstOrCreate(
+            ['name' => $row['category']],
+            ['description' => $row['category'] . ' books']
+        );
+
         if (!$category) {
             return null;
         }
 
-        $isbn = (string) trim($row['isbn']);
+        $isbn = preg_replace('/[^0-9X]/i', '', (string) $row['isbn']);
         $existing = Book::where('isbn', $isbn)->first();
 
         if ($existing) {
@@ -46,6 +51,8 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                     'stock_quantity' => (int) $row['stock'],
                     'category_id' => $category->id,
                     'description' => $row['description'] ?? $existing->description,
+                    'format' => $row['format'] ?? $existing->format,
+                    'is_active' => true,
                 ]);
                 return null;
             }
@@ -60,7 +67,20 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             'stock_quantity' => (int) $row['stock'],
             'category_id' => $category->id,
             'description' => $row['description'] ?? '',
+            'format' => $row['format'] ?? 'paperback',
+            'is_active' => true,
         ]);
+    }
+
+    public function prepareForValidation($data, $index)
+    {
+        foreach (['isbn', 'title', 'author', 'category', 'format', 'description'] as $field) {
+            if (array_key_exists($field, $data) && $data[$field] !== null) {
+                $data[$field] = trim((string) $data[$field]);
+            }
+        }
+
+        return $data;
     }
 
     public function rules(): array
@@ -68,13 +88,13 @@ class BooksImport implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         return [
             'isbn' => [
                 'required',
-                'regex:/^(?:\d{9}[\dX]|\d{13})$/',
+                'regex:/^(?:\d[\-\s]?){9}[\dXx]$|^(?:\d[\-\s]?){13}$/',
             ],
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'price' => 'required|numeric|min:0|max:9999.99',
             'stock' => 'required|integer|min:0',
-            'category' => 'required|string|exists:categories,name',
+            'category' => 'required|string|max:255',
         ];
     }
 

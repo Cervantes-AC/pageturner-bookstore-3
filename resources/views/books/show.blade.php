@@ -7,7 +7,7 @@
         {{-- Cover --}}
         <div class="md:w-5/12 bg-gradient-to-br from-parchment-100 to-parchment-200 p-8 flex items-center justify-center min-h-[400px]">
             @if($book->cover_image)
-                <img src="{{ asset('storage/' . $book->cover_image) }}"
+                <img src="{{ $book->cover_url }}"
                      alt="{{ $book->title }}" class="max-h-96 object-contain rounded-lg shadow-lg">
             @else
                 <div class="text-8xl opacity-30">

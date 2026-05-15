@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\RateLimitController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
@@ -78,11 +80,20 @@ Route::middleware(['auth', 'verified', '2fa', 'role:admin'])->prefix('admin')->n
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     // Book management
+    Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
     Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
     Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
     Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
+
+    // User management
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // ─── Import/Export ────────────────────────────────────────
     Route::prefix('import-export')->name('import-export.')->group(function () {
@@ -104,14 +115,15 @@ Route::middleware(['auth', 'verified', '2fa', 'role:admin'])->prefix('admin')->n
     // ─── Audit Logs ───────────────────────────────────────────
     Route::prefix('audit')->name('audit.')->group(function () {
         Route::get('/', [AuditController::class, 'index'])->name('index');
+        Route::get('/export', [AuditController::class, 'export'])->name('export');
         Route::get('/{auditLog}', [AuditController::class, 'show'])->name('show');
-        Route::get('/export/csv', [AuditController::class, 'export'])->name('export');
     });
 
     // ─── Backup ───────────────────────────────────────────────
     Route::prefix('backup')->name('backup.')->group(function () {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::post('/run', [BackupController::class, 'run'])->name('run');
+        Route::get('/{backupMonitoring}/download', [BackupController::class, 'download'])->name('download');
         Route::get('/{backupMonitoring}', [BackupController::class, 'show'])->name('show');
     });
 

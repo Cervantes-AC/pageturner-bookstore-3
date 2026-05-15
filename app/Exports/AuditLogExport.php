@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,15 +12,18 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class AuditLogExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
+    protected $userCache = [];
 
     public function __construct(array $filters = [])
     {
         $this->filters = $filters;
+        // Pre-load all users into memory once
+        $this->userCache = User::pluck('name', 'id')->toArray();
     }
 
     public function query()
     {
-        $query = AuditLog::with('user');
+        $query = AuditLog::select(['id', 'user_id', 'event', 'auditable_type', 'auditable_id', 'ip_address', 'url', 'method', 'created_at']);
 
         if (!empty($this->filters['user_id'])) {
             $query->where('user_id', $this->filters['user_id']);
@@ -60,7 +64,7 @@ class AuditLogExport implements FromQuery, WithHeadings, WithMapping, WithChunkR
     {
         return [
             $log->id,
-            $log->user->name ?? 'System',
+            $this->userCache[$log->user_id] ?? 'System',
             $log->event,
             class_basename($log->auditable_type),
             $log->auditable_id,
@@ -73,6 +77,6 @@ class AuditLogExport implements FromQuery, WithHeadings, WithMapping, WithChunkR
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 250;
     }
 }

@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use App\Models\AuditLog;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Route;
 
 class AuditRequests
 {
@@ -35,16 +34,30 @@ class AuditRequests
 
             if (isset($auditableEvents[$routeName])) {
                 $auditId = (string) Str::uuid();
-                $checksum = hash('sha256', $auditId . $request->user()->id . $routeName);
+                $event = $auditableEvents[$routeName];
+                $auditableType = 'App\\Models\\' . $this->guessModel($routeName);
+                $auditableId = $this->auditableId($route);
+                $newValues = AuditLog::sanitizeValues(
+                    $request->except(['_token', '_method'])
+                );
+                $checksum = AuditLog::checksumFor(
+                    $auditId,
+                    $request->user()->id,
+                    $event,
+                    $auditableType,
+                    $auditableId,
+                    null,
+                    $newValues
+                );
 
                 AuditLog::create([
                     'id' => $auditId,
                     'user_id' => $request->user()->id,
-                    'event' => $auditableEvents[$routeName],
-                    'auditable_type' => 'App\\Models\\' . $this->guessModel($routeName),
-                    'auditable_id' => $route?->parameter('book') ?? $route?->parameter('category') ?? $route?->parameter('order') ?? $route?->parameter('review') ?? 0,
+                    'event' => $event,
+                    'auditable_type' => $auditableType,
+                    'auditable_id' => $auditableId,
                     'old_values' => null,
-                    'new_values' => $request->except(['_token', '_method', 'password', 'password_confirmation']),
+                    'new_values' => $newValues,
                     'checksum' => $checksum,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
@@ -62,5 +75,22 @@ class AuditRequests
         if (str_contains($routeName, 'orders')) return 'Order';
         if (str_contains($routeName, 'reviews')) return 'Review';
         return 'Unknown';
+    }
+
+    protected function auditableId($route): int
+    {
+        foreach (['book', 'category', 'order', 'review'] as $parameter) {
+            $value = $route?->parameter($parameter);
+
+            if (is_object($value) && isset($value->id)) {
+                return (int) $value->id;
+            }
+
+            if (is_numeric($value)) {
+                return (int) $value;
+            }
+        }
+
+        return 0;
     }
 }

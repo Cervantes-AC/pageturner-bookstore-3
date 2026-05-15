@@ -48,6 +48,6 @@ class UsersExport implements FromQuery, WithHeadings, WithMapping, WithChunkRead
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 250;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Order;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,15 +12,20 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     protected $filters;
+    protected $userCache = [];
+    protected $userNames = [];
 
     public function __construct(array $filters = [])
     {
         $this->filters = $filters;
+        // Pre-load all users into memory once
+        $this->userCache = User::pluck('email', 'id')->toArray();
+        $this->userNames = User::pluck('name', 'id')->toArray();
     }
 
     public function query()
     {
-        $query = Order::with('user', 'orderItems.book');
+        $query = Order::select(['id', 'user_id', 'total_amount', 'status', 'created_at']);
 
         if (!empty($this->filters['status'])) {
             $query->where('status', $this->filters['status']);
@@ -53,19 +59,21 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, WithChunkRea
 
     public function map($order): array
     {
+        $itemsCount = $order->orderItems()->sum('quantity');
+        
         return [
             $order->id,
-            $order->user->name ?? 'N/A',
-            $order->user->email ?? 'N/A',
+            $this->userNames[$order->user_id] ?? 'N/A',
+            $this->userCache[$order->user_id] ?? 'N/A',
             $order->total_amount,
             $order->status,
-            $order->orderItems->sum('quantity'),
+            $itemsCount,
             $order->created_at->format('Y-m-d H:i:s'),
         ];
     }
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 250;
     }
 }

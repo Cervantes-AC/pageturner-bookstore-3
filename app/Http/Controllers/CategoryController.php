@@ -2,14 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Book;
 use App\Models\Category;
+use App\Services\BookFilterService;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::withCount('books')->paginate(10);
+        $query = Category::withCount('books');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        match ($request->input('sort')) {
+            'name_desc' => $query->orderBy('name', 'desc'),
+            'books_desc' => $query->orderBy('books_count', 'desc'),
+            'books_asc' => $query->orderBy('books_count', 'asc'),
+            default => $query->orderBy('name'),
+        };
+
+        $categories = $query->paginate(9)->withQueryString();
+
         return view('categories.index', compact('categories'));
     }
 
@@ -31,10 +51,22 @@ class CategoryController extends Controller
             ->with('success', 'Category created successfully!');
     }
 
-    public function show(Category $category)
+    public function show(Request $request, Category $category, BookFilterService $filterService)
     {
-        $books = $category->books()->paginate(12);
-        return view('categories.show', compact('category', 'books'));
+        $query = Book::with('category')->where('category_id', $category->id);
+        $query = $filterService->applyFilters($query, $request->except('category'));
+        $query = $filterService->applySorting($query, $request->sort);
+
+        $books = $query->paginate(12)->withQueryString();
+        $categories = Category::withCount('books')->get();
+        $filterOptions = $filterService->getFilterOptions();
+        $years = $category->books()
+            ->whereNotNull('publication_year')
+            ->distinct()
+            ->orderBy('publication_year', 'desc')
+            ->pluck('publication_year');
+
+        return view('categories.show', compact('category', 'books', 'categories', 'filterOptions', 'years'));
     }
 
     public function edit(Category $category)

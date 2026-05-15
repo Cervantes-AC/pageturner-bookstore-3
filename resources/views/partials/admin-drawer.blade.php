@@ -51,13 +51,13 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
         <div class="pt-4 pb-2">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Catalog</p>
         </div>
-        <a href="{{ route('admin.books.create') }}"
+        <a href="{{ route('admin.books.index') }}"
            class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.books.create' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
+                  {{ str_starts_with($currentRoute, 'admin.books.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span>Add Book</span>
+            <span>Manage Books</span>
         </a>
         <a href="{{ route('admin.categories.create') }}"
            class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -66,6 +66,14 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
             <span>Add Category</span>
+        </a>
+        <a href="{{ route('admin.books.create') }}"
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {{ $currentRoute === 'admin.books.create' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add Book</span>
         </a>
 
         <div class="pt-4 pb-2">
@@ -102,6 +110,18 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>Import Logs</span>
+        </a>
+
+        <div class="pt-4 pb-2">
+            <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Users</p>
+        </div>
+        <a href="{{ route('admin.users.index') }}"
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  {{ str_starts_with($currentRoute, 'admin.users.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+            <span>Manage Users</span>
         </a>
 
         <div class="pt-4 pb-2">

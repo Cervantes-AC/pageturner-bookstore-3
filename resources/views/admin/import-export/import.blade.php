@@ -98,6 +98,21 @@
                             <td class="px-4 py-3 text-ink-400">{{ $import->user->name ?? 'System' }}</td>
                             <td class="px-4 py-3 text-ink-400">{{ $import->created_at->diffForHumans() }}</td>
                         </tr>
+                        @if($import->failed_rows > 0 && !empty($import->failures))
+                            <tr class="bg-orange-50">
+                                <td colspan="7" class="px-4 py-3 text-xs text-orange-800">
+                                    @foreach(array_slice($import->failures, 0, 3) as $failure)
+                                        <div>
+                                            Row {{ $failure['row'] ?? '?' }}
+                                            @if(!empty($failure['attribute']))
+                                                ({{ $failure['attribute'] }})
+                                            @endif
+                                            - {{ implode(' ', $failure['errors'] ?? [$failure['error'] ?? 'Import row failed.']) }}
+                                        </div>
+                                    @endforeach
+                                </td>
+                            </tr>
+                        @endif
                         @endforeach
                     </tbody>
                 </table>

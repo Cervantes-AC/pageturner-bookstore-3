@@ -45,6 +45,6 @@ class RefreshMaterializedViews extends Command
         }
 
         $this->info("Refreshed {$inserted} category statistics.");
-        return 0;
+        return Command::SUCCESS;
     }
 }
