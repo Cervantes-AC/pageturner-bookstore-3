@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AIReportController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
@@ -127,8 +129,25 @@ Route::middleware(['auth', 'verified', '2fa', 'role:admin'])->prefix('admin')->n
         Route::get('/{backupMonitoring}', [BackupController::class, 'show'])->name('show');
     });
 
+    // ─── Analytics ────────────────────────────────────────────
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/data', [AnalyticsController::class, 'data'])->name('analytics.data');
+
     // ─── Rate Limits ──────────────────────────────────────────
     Route::get('/rate-limits', [RateLimitController::class, 'index'])->name('rate-limits.index');
+
+    // ─── AI Reports ───────────────────────────────────────────
+    Route::prefix('ai-reports')->name('ai-reports.')->group(function () {
+        Route::get('/', [AIReportController::class, 'index'])->name('index');
+        Route::get('/create', [AIReportController::class, 'create'])->name('create');
+        Route::post('/', [AIReportController::class, 'store'])->name('store');
+        Route::get('/{report}', [AIReportController::class, 'show'])->name('show');
+        Route::get('/{report}/print', [AIReportController::class, 'showPrint'])->name('print');
+        Route::get('/{report}/word', [AIReportController::class, 'downloadWord'])->name('word');
+        Route::post('/{report}/regenerate', [AIReportController::class, 'regenerate'])->name('regenerate');
+        Route::delete('/{report}', [AIReportController::class, 'destroy'])->name('destroy');
+        Route::get('/usage/logs', [AIReportController::class, 'usageLogs'])->name('usage');
+    });
 });
 
 require __DIR__.'/auth.php';

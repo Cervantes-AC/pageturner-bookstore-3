@@ -123,6 +123,13 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        'ai_audit' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/ai-audit.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

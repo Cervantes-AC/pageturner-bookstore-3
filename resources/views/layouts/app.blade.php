@@ -55,5 +55,6 @@
         </svg>
     </button>
 </div>
+@stack('scripts')
 </body>
 </html>

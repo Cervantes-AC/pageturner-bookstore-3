@@ -20,6 +20,15 @@ class DashboardController extends Controller
         $data = [
             'totalBooks' => Book::count(),
             'totalOrders' => Order::count(),
+            'totalRevenue' => (float) Order::whereIn('status', ['completed', 'processing'])->sum('total_amount'),
+            'revenueThisMonth' => (float) Order::whereIn('status', ['completed', 'processing'])
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_amount'),
+            'ordersThisMonth' => Order::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'avgOrderValue' => (float) Order::whereIn('status', ['completed', 'processing'])->avg('total_amount') ?? 0,
             'totalUsers' => User::count(),
             'recentOrders' => Order::with('user')->latest()->take(5)->get(),
             'orderStatusSummary' => Order::selectRaw('status, count(*) as count')
@@ -37,6 +46,12 @@ class DashboardController extends Controller
             'exportCount' => ExportLog::where('status', 'completed')->count(),
             'pendingOrders' => Order::where('status', 'pending')->count(),
             'dbSize' => $this->getDatabaseSize(),
+            'monthlyRevenue' => Order::whereIn('status', ['completed', 'processing'])
+                ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_amount) as revenue, COUNT(*) as orders")
+                ->groupBy('month')
+                ->orderBy('month', 'desc')
+                ->limit(6)
+                ->get(),
         ];
 
         return view('admin.dashboard', compact('data'));

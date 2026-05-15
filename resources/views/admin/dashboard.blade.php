@@ -7,7 +7,7 @@
 
 @section('content')
     {{-- Stats Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -35,6 +35,21 @@
                 </div>
             </div>
             <p class="text-sm text-ink-400 mt-2">{{ $data['pendingOrders'] }} pending</p>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-ink-400">Total Revenue</p>
+                    <p class="font-heading text-3xl font-bold text-emerald-700">₱{{ number_format($data['totalRevenue'], 0) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-sm text-ink-400 mt-2">₱{{ number_format($data['revenueThisMonth'], 0) }} this month</p>
         </div>
 
         <div class="bg-white rounded-xl p-6 shadow-sm border border-parchment-200">
@@ -103,6 +118,49 @@
                         <span class="text-sm font-medium text-teal-700">Export Logs</span>
                     </a>
                 </div>
+            </div>
+
+            {{-- Revenue Overview --}}
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Revenue Overview</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-emerald-50 rounded-lg p-4 text-center">
+                        <p class="text-xs font-medium text-ink-400 uppercase tracking-wide">Total Revenue</p>
+                        <p class="font-heading text-2xl font-bold text-emerald-700 mt-1">₱{{ number_format($data['totalRevenue'], 0) }}</p>
+                    </div>
+                    <div class="bg-gold-50 rounded-lg p-4 text-center">
+                        <p class="text-xs font-medium text-ink-400 uppercase tracking-wide">This Month</p>
+                        <p class="font-heading text-2xl font-bold text-gold-700 mt-1">₱{{ number_format($data['revenueThisMonth'], 0) }}</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <p class="text-xs font-medium text-ink-400 uppercase tracking-wide">Avg Order Value</p>
+                        <p class="font-heading text-2xl font-bold text-blue-700 mt-1">₱{{ number_format($data['avgOrderValue'], 2) }}</p>
+                    </div>
+                </div>
+                @if($data['monthlyRevenue']->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-parchment-200">
+                                    <th class="text-left py-2 text-ink-500 font-medium">Month</th>
+                                    <th class="text-right py-2 text-ink-500 font-medium">Orders</th>
+                                    <th class="text-right py-2 text-ink-500 font-medium">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($data['monthlyRevenue'] as $row)
+                                    <tr class="border-b border-parchment-100">
+                                        <td class="py-2 text-ink-700">{{ $row->month }}</td>
+                                        <td class="py-2 text-right text-ink-700">{{ $row->orders }}</td>
+                                        <td class="py-2 text-right text-ink-700 font-medium">₱{{ number_format($row->revenue, 0) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-ink-400 text-sm">No revenue data yet</p>
+                @endif
             </div>
 
             {{-- Recent Orders --}}
@@ -221,6 +279,24 @@
                             <span class="text-sm font-semibold text-ink-900">{{ $data['orderStatusSummary'][$status] ?? 0 }}</span>
                         </div>
                     @endforeach
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6">
+                <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Revenue Summary</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-ink-400">Avg Order Value</span>
+                        <span class="text-sm font-semibold text-ink-900">₱{{ number_format($data['avgOrderValue'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-ink-400">Orders This Month</span>
+                        <span class="text-sm font-semibold text-ink-900">{{ $data['ordersThisMonth'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-ink-400">Revenue This Month</span>
+                        <span class="text-sm font-semibold text-emerald-600">₱{{ number_format($data['revenueThisMonth'], 0) }}</span>
+                    </div>
                 </div>
             </div>
 
