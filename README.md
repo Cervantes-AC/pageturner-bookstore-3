@@ -369,7 +369,7 @@ Visit: `http://localhost:8000`
 ## Default Login Credentials
 
 ### Admin Account
-- **Email:** admin@pageturner.com
+- **Email:** admin@gmail.com
 - **Password:** password
 
 ### Test Customer Accounts
