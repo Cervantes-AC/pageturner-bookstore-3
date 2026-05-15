@@ -22,23 +22,30 @@ class BookRepository
 
     public function getActiveCatalog(int $perPage = 100): CursorPaginator
     {
-        return Book::select($this->catalogFields)
-            ->with(['category:id,name'])
-            ->where('is_active', true)
-            ->orderBy('published_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->cursorPaginate($perPage);
+        return $this->cacheService->rememberCatalog(
+            "page:{$perPage}",
+            fn() => Book::select($this->catalogFields)
+                ->with(['category:id,name'])
+                ->where('is_active', true)
+                ->orderBy('published_at', 'desc')
+                ->orderBy('id', 'desc')
+                ->cursorPaginate($perPage)
+        );
     }
 
     public function getCatalogByCategory(int $categoryId, int $perPage = 100): CursorPaginator
     {
-        return Book::select($this->catalogFields)
-            ->with(['category:id,name'])
-            ->where('category_id', $categoryId)
-            ->where('is_active', true)
-            ->orderBy('published_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->cursorPaginate($perPage);
+        return $this->cacheService->rememberCategoryCatalog(
+            $categoryId,
+            "page:{$perPage}",
+            fn() => Book::select($this->catalogFields)
+                ->with(['category:id,name'])
+                ->where('category_id', $categoryId)
+                ->where('is_active', true)
+                ->orderBy('published_at', 'desc')
+                ->orderBy('id', 'desc')
+                ->cursorPaginate($perPage)
+        );
     }
 
     public function findByIsbn(string $isbn): ?Book
@@ -91,13 +98,16 @@ class BookRepository
 
     public function getBooksByPriceRange(float $min, float $max, int $perPage = 100): CursorPaginator
     {
-        return Book::select($this->catalogFields)
-            ->with(['category:id,name'])
-            ->where('is_active', true)
-            ->whereBetween('price', [$min, $max])
-            ->orderBy('price', 'asc')
-            ->orderBy('id', 'desc')
-            ->cursorPaginate($perPage);
+        return $this->cacheService->rememberCatalog(
+            "price:{$min}:{$max}:{$perPage}",
+            fn() => Book::select($this->catalogFields)
+                ->with(['category:id,name'])
+                ->where('is_active', true)
+                ->whereBetween('price', [$min, $max])
+                ->orderBy('price', 'asc')
+                ->orderBy('id', 'desc')
+                ->cursorPaginate($perPage)
+        );
     }
 
     public function getExportQuery()

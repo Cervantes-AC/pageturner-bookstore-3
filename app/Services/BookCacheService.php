@@ -10,6 +10,12 @@ class BookCacheService
     private const CATALOG_CACHE_KEY = 'books:catalog';
     private const ISBN_CACHE_PREFIX = 'book:isbn:';
     private const CACHE_TTL = 3600;
+    private const TAG_CACHE_STORE = 'redis-tags';
+
+    private function tags(array $tags): \Illuminate\Cache\TaggedCache
+    {
+        return Cache::store(self::TAG_CACHE_STORE)->tags($tags);
+    }
 
     public function rememberIsbn(string $isbn, Closure $callback): mixed
     {
@@ -20,35 +26,40 @@ class BookCacheService
         );
     }
 
-    public function rememberCatalog(int $page, Closure $callback): mixed
+    public function forgetIsbn(string $isbn): void
     {
-        return Cache::remember(
-            self::CATALOG_CACHE_KEY . ":page:{$page}",
-            self::CACHE_TTL,
-            $callback
-        );
+        Cache::forget(self::ISBN_CACHE_PREFIX . $isbn);
     }
 
-    public function rememberCategoryCatalog(int $categoryId, int $page, Closure $callback): mixed
+    public function rememberCatalog(string $cursorHash, Closure $callback): mixed
     {
-        return Cache::remember(
-            "category:{$categoryId}:catalog:page:{$page}",
-            self::CACHE_TTL,
-            $callback
-        );
+        return $this->tags(['catalog'])
+            ->remember(
+                self::CATALOG_CACHE_KEY . ":{$cursorHash}",
+                self::CACHE_TTL,
+                $callback
+            );
+    }
+
+    public function rememberCategoryCatalog(int $categoryId, string $cursorHash, Closure $callback): mixed
+    {
+        return $this->tags(["category:{$categoryId}"])
+            ->remember(
+                "category:{$categoryId}:catalog:{$cursorHash}",
+                self::CACHE_TTL,
+                $callback
+            );
     }
 
     public function invalidateCatalog(): void
     {
-        Cache::forget(self::CATALOG_CACHE_KEY . ':invalidate');
-        Cache::increment(self::CATALOG_CACHE_KEY . ':version');
+        $this->tags(['catalog'])->flush();
     }
 
     public function invalidateCategory(int $categoryId): void
     {
-        $prefix = "category:{$categoryId}";
-        Cache::forget("{$prefix}:invalidate");
-        Cache::increment("{$prefix}:version");
+        $this->tags(["category:{$categoryId}"])->flush();
+        Cache::forget(self::ISBN_CACHE_PREFIX . ':category:' . $categoryId);
     }
 
     public function invalidateIsbn(string $isbn): void
@@ -58,15 +69,21 @@ class BookCacheService
 
     public function warmCategoryPopular(int $categoryId, array $books): void
     {
-        Cache::put(
-            "category:{$categoryId}:popular",
-            $books,
-            7200
-        );
+        $this->tags(["category:{$categoryId}"])
+            ->put(
+                "category:{$categoryId}:popular",
+                $books,
+                7200
+            );
     }
 
     public function getCategoryPopular(int $categoryId): mixed
     {
         return Cache::get("category:{$categoryId}:popular");
+    }
+
+    public function flushAll(): void
+    {
+        $this->tags(['catalog', 'category'])->flush();
     }
 }

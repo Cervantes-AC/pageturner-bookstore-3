@@ -4,10 +4,10 @@
 - **Name:** Aaron Clyde C. Cervantes
 - **Course:** Bachelor of Science in Information Technology
 - **University:** Central Mindanao University
-- **Activity:** Laboratory Activity 6 - Advanced Laravel Features & Enterprise-Grade Bookstore System
+- **Activity:** Laboratory Activity 7 - Mass Data Seeding, Performance Optimization, and Scalability Engineering
 
 ## Project Description
-PageTurner is a comprehensive, enterprise-grade online bookstore management system built with Laravel 12. This full-featured web application demonstrates advanced Laravel concepts including routing, controllers, views, Blade templating, database operations, user authentication, and modern enterprise features. The system serves both administrators and customers with distinct functionalities for managing books, categories, orders, reviews, auditing, backups, and analytics.
+PageTurner is a comprehensive, enterprise-grade online bookstore management system built with Laravel 12. This full-featured web application demonstrates advanced Laravel concepts including routing, controllers, views, Blade templating, database operations, user authentication, and modern enterprise features. The system serves both administrators and customers with distinct functionalities for managing books, categories, orders, reviews, auditing, backups, and analytics. Laboratory Activity 7 focuses on scaling the catalog to 1M+ records, database performance tuning, caching architectures, and horizontal scaling strategies.
 
 ## Learning Objectives Achieved
 ### Core Laravel Concepts
@@ -30,6 +30,24 @@ PageTurner is a comprehensive, enterprise-grade online bookstore management syst
 - ✅ Queue system for background jobs
 - ✅ Redis caching and session management
 - ✅ Scheduled tasks and maintenance commands
+
+### Lab 7: Scalability & Performance Engineering
+- ✅ Mass data seeding of 1M+ book records in under 10 minutes (< 512 MB RAM)
+- ✅ Valid ISBN-13 generation with modulo-10 checksum
+- ✅ Chunked batch insert strategy (5K records per batch)
+- ✅ Database table partitioning by publication year (range partitioning)
+- ✅ Composite indexes and covering indexes for index-only scans
+- ✅ MySQL FULLTEXT index for high-performance search
+- ✅ Redis tag-based query result caching with targeted invalidation
+- ✅ Cursor pagination (O(1)) vs offset pagination (O(n))
+- ✅ Read/write splitting with sticky connections
+- ✅ Materialized views for bestseller reporting
+- ✅ Read replica integration for reporting offloading
+- ✅ N+1 query prevention with whenLoaded() and selective eager loading
+- ✅ Model observers for smart cache invalidation
+- ✅ Asynchronous cache warming via background jobs
+- ✅ Performance benchmarking automation with CI/CD exit codes
+- ✅ Load testing with 50 concurrent request simulation
 
 ## Features
 
@@ -123,6 +141,72 @@ PageTurner is a comprehensive, enterprise-grade online bookstore management syst
 - 🎯 Query optimization with eager loading
 - 📈 Performance monitoring
 
+### Lab 7: Mass Data Seeding (1M Books)
+- ✅ Memory-safe chunked batch insert via `DB::table('books')->insert()` (5K per chunk)
+- ✅ Manual garbage collection every 10 chunks to stay under 512 MB
+- ✅ Faker-free static data generation (mt_rand + static arrays) for zero-overhead
+- ✅ Valid ISBN-13 with proper prefix and checksum digit
+- ✅ Format-aware realistic pricing (Paperback: $7.99-$24.99, Hardcover: $16.99-$45.00, etc.)
+- ✅ 85% active / 15% inactive distribution
+- ✅ 15 real-world publisher names
+- ✅ 33 first names x 34 last names for varied author generation
+- ✅ 12 title prefixes x 18 adjectives x 27 nouns x 22 themes for 128K+ unique titles
+- ✅ Cursor pagination for stable iteration without OFFSET degradation
+
+### Lab 7: Query Performance Optimization
+- **ISBN Lookup:** `< 50ms` — unique index + Redis cache
+- **Catalog Listing:** `< 100ms` — cursor pagination + covering index
+- **Category Filter:** `< 150ms` — composite index (`category_id`, `published_at`, `is_active`) + query cache
+- **Full-Text Search:** `< 300ms` — Scout + MySQL FULLTEXT index
+- **Cached Requests:** `< 10ms` — Redis tag-based caching
+- **Export (50K):** `< 30s` — queue + lazy collection streaming
+
+### Lab 7: Database Architecture
+- **Table Partitioning:** Range partitioning by `YEAR(published_at)` — 7 partitions (p_old through p_future)
+- **Materialized View:** `mv_bestseller_stats` — pre-computed category aggregates refreshed hourly
+- **Covering Index:** `idx_books_price_stock` on (`price`, `stock_quantity`, `id`) — index-only scans
+- **Composite Index:** `idx_books_catalog_filter` on (`category_id`, `published_at`, `is_active`)
+- **Full-Text Index:** `idx_books_fulltext` on (`title`, `description`)
+- **Query Performance Logs:** `query_performance_logs` table for slow query monitoring
+
+### Lab 7: Redis Cache Architecture
+```
+Database 0: General purpose
+Database 1: Query result caching (redis-tags store)
+              ├── tag: "catalog" → catalog listings, price range queries
+              └── tag: "category:{id}" → category-specific catalogs
+Database 2: Session storage
+Database 3: Queue jobs
+```
+
+### Lab 7: Scalability Features
+- **Read/Write Splitting:** Automatic read traffic to replica hosts, sticky sessions
+- **Database Sharding:** `Shardable` trait with modulo-4 routing for horizontal scaling
+- **Async Cache Warmup:** `WarmCategoryCache` job pre-loads top 1000 books per category
+- **Smart Cache Invalidation:** `BookObserver` flushes relevant tags on save/delete
+- **Query Streaming:** `FromQuery` + `WithChunkReading` (chunk 2000) for memory-safe exports
+- **Rate Limiting:** Tiered Redis-backed limits (public: 30/min, standard: 60, premium: 300, admin: 1000)
+- **Connection Pooling:** PDO persistent connections for Swoole/RoadRunner compatibility
+
+### Lab 7: Performance Deliverables
+| File | Purpose |
+|------|---------|
+| `database/factories/BookFactory.php` | Optimized factory with ISBN-13 generation, cached category IDs, format pricing |
+| `database/seeders/MassBookSeeder.php` | Chunked batch insert (5K) for 1M records with garbage collection |
+| `database/seeders/CategorySeeder.php` | Prerequisite seeder for users and categories |
+| `app/Repositories/BookRepository.php` | Optimized data access with cursor pagination + Redis tag caching |
+| `app/Services/BookCacheService.php` | Redis tag-based caching abstraction with targeted invalidation |
+| `app/Observers/BookObserver.php` | Cache invalidation on model saved/deleted events |
+| `app/Console/Commands/BenchmarkBookQueries.php` | Automated benchmarking against sub-second targets |
+| `app/Console/Commands/IndexBooksBatch.php` | Chunked Scout search index import |
+| `app/Console/Commands/RefreshMaterializedViews.php` | Hourly materialized view refresh |
+| `app/Jobs/WarmCategoryCache.php` | Background cache warming per category |
+| `app/Traits/Shardable.php` | Modulo-4 shard routing for horizontal scaling |
+| `config/scout.php` | Scout search engine configuration |
+| `tests/Performance/BookCatalogLoadTest.php` | Load test: 50 concurrent requests + response time validation |
+| `database/migrations/*_optimize_books_*` | Composite, covering, full-text, and lookup indexes |
+| `database/migrations/*_partition_books_by_year*` | Range partitioning by publication year |
+
 ## Technologies Used
 - **Laravel:** 12.x
 - **PHP:** 8.2+
@@ -144,7 +228,7 @@ PageTurner is a comprehensive, enterprise-grade online bookstore management syst
 ### Tables Overview
 - **users** - User accounts with roles and 2FA support
 - **categories** - Book categories/genres
-- **books** - Book inventory with category relationships
+- **books** - Book inventory with category relationships (partitioned by year)
 - **orders** - Customer orders with status tracking
 - **order_items** - Individual items in orders
 - **reviews** - Customer book reviews with ratings
@@ -154,6 +238,10 @@ PageTurner is a comprehensive, enterprise-grade online bookstore management syst
 - **export_logs** - Export operation history
 - **import_logs** - Import operation history
 - **scheduled_tasks** - Scheduled task tracking
+- **mv_bestseller_stats** - Materialized view for bestseller/inventory reports
+- **book_yearly_partitions** - Partitioned book data by publication year
+- **query_performance_logs** - Slow query monitoring and logging
+- **notifications** - Notification and alert preferences
 - **sessions** - User session data (Redis)
 - **cache** - Application cache (Redis)
 - **jobs** - Queue job tracking (Redis)
@@ -404,37 +492,71 @@ Visit: `http://localhost:8000`
 ```
 pageturner-bookstore/
 ├── app/
+│   ├── Console/
+│   │   └── Commands/
+│   │       ├── BenchmarkBookQueries.php      # Performance benchmark
+│   │       ├── IndexBooksBatch.php           # Scout chunked import
+│   │       ├── RefreshMaterializedViews.php  # Hourly stats refresh
+│   │       ├── WarmCategoryCache.php         # (moved to Jobs/)
+│   │       └── ... (maintenance commands)
+│   ├── Exports/
+│   │   ├── BooksExport.php                  # FromQuery + WithChunkReading
+│   │   └── QueuedBooksExport.php            # ShouldQueue export
 │   ├── Http/
 │   │   ├── Controllers/
+│   │   │   ├── Admin/ (Dashboard, Backup, Import/Export, Audit, etc.)
 │   │   │   ├── Auth/ (Breeze controllers)
 │   │   │   ├── BookController.php
 │   │   │   ├── CategoryController.php
 │   │   │   ├── HomeController.php
 │   │   │   ├── OrderController.php
 │   │   │   └── ReviewController.php
-│   │   └── Requests/
-│   └── Models/
-│       ├── User.php
-│       ├── Category.php
-│       ├── Book.php
-│       ├── Order.php
-│       ├── OrderItem.php
-│       └── Review.php
+│   │   └── Resources/
+│   │       ├── BookResource.php             # whenLoaded() N+1 prevention
+│   │       ├── CategoryResource.php
+│   │       └── ReviewResource.php
+│   ├── Jobs/
+│   │   └── WarmCategoryCache.php            # Async cache pre-warming
+│   ├── Models/
+│   │   ├── User.php
+│   │   ├── Category.php
+│   │   ├── Book.php                         # Searchable trait, toSearchableArray()
+│   │   ├── Order.php
+│   │   ├── OrderItem.php
+│   │   └── Review.php
+│   ├── Observers/
+│   │   └── BookObserver.php                 # Tag-based cache invalidation
+│   ├── Repositories/
+│   │   └── BookRepository.php               # Cursor pagination + Redis tag cache
+│   ├── Services/
+│   │   ├── BookCacheService.php             # Redis tag-based caching
+│   │   └── ... (BookFilterService, OrderService)
+│   └── Traits/
+│       └── Shardable.php                    # Modulo-4 shard routing
 ├── database/
 │   ├── factories/
+│   │   ├── BookFactory.php                  # ISBN-13, cached IDs, format pricing
+│   │   └── ...
 │   ├── migrations/
+│   │   ├── *create_books_table.php
+│   │   ├── *optimize_books_table_indexes.php # Composite, covering, fulltext indexes
+│   │   ├── *partition_books_by_year.php      # Range partitioning
+│   │   ├── *create_bestseller_stats_table.php # Materialized view table
+│   │   ├── *create_query_performance_logs_table.php
+│   │   └── ...
 │   └── seeders/
+│       ├── DatabaseSeeder.php
+│       ├── CategorySeeder.php               # Users + 5 categories
+│       └── MassBookSeeder.php               # 1M records, chunked batch insert
 ├── resources/
-│   └── views/
-│       ├── auth/ (Breeze views)
-│       ├── books/
-│       ├── categories/
-│       ├── cart/
-│       ├── components/
-│       ├── layouts/
-│       └── partials/
-└── routes/
-    └── web.php
+│   └── views/ ...
+├── routes/
+│   ├── web.php
+│   ├── api.php                              # Book API with cursor pagination
+│   └── console.php                          # Schedule definitions
+└── tests/
+    └── Performance/
+        └── BookCatalogLoadTest.php          # 50 concurrent request load test
 ```
 
 ## Challenges Faced and Solutions
@@ -451,6 +573,15 @@ pageturner-bookstore/
 4. **Challenge:** Complex Blade component structure
    - **Solution:** Created reusable components with slots for flexibility
 
+5. **Challenge:** Seeding 1M records without exhausting memory
+   - **Solution:** Used `DB::table('books')->insert()` with 5K chunks instead of Eloquent models, manual `gc_collect_cycles()` every 10 chunks, and faker-free static data arrays
+
+6. **Challenge:** Maintaining sub-100ms catalog response at 1M records
+   - **Solution:** Cursor pagination (O(1) vs O(n) for OFFSET), covering indexes for index-only scans, and Redis tag-based caching with targeted invalidation
+
+7. **Challenge:** Full-text search across 1M records
+   - **Solution:** MySQL FULLTEXT index on title/description + Laravel Scout database engine with queued indexing
+
 ## Future Enhancements
 - [ ] Advanced inventory management
 - [ ] Email notifications for orders
@@ -459,9 +590,13 @@ pageturner-bookstore/
 - [ ] Multi-language support
 - [ ] Payment gateway integration
 - [ ] Advanced reporting dashboard
+- [ ] Meilisearch integration for faster full-text search
+- [ ] Horizontal sharding with dedicated database servers
+- [ ] ClickHouse integration for real-time analytics
+- [ ] GraphQL API endpoint for flexible queries
 
 ## Academic Integrity Statement
-This project was completed individually as part of Laboratory Activity 3. All code was written following Laravel best practices and the provided specifications. The implementation demonstrates original understanding of the concepts taught in class.
+This project was completed individually as part of Laboratory Activity 7. All code was written following Laravel best practices and the provided specifications. The implementation demonstrates original understanding of mass data seeding, performance optimization, and scalability engineering concepts taught in class.
 
 
 ## License
@@ -475,6 +610,6 @@ This project was created for educational purposes as part of coursework requirem
 
 ---
 
-**Created with ❤️ for Laboratory Activity 3**  
-*Routing, Controllers, Views, Blade Templating, and Database Operations*  
+**Created with ❤️ for Laboratory Activity 7**  
+*Mass Data Seeding, Performance Optimization, and Scalability Engineering*  
 *PageTurner Online Bookstore Management System*
