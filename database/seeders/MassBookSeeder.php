@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class MassBookSeeder extends Seeder
 {
     private const CHUNK_SIZE = 4000;
-    private const TOTAL_RECORDS = 1000000;
+    private const TOTAL_RECORDS = 10000;
 
     private static array $publishers = [
         'Penguin Random House', 'HarperCollins', 'Simon & Schuster',
