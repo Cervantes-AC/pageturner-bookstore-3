@@ -354,17 +354,57 @@ PROMPT;
 
     protected function extractJson(string $text): ?string
     {
-        if (preg_match('/```(?:json)?\s*(\{.*?\})\s*```/s', $text, $matches)) {
-            return $matches[1];
+        if (preg_match('/```(?:json)?\s*\n?(.*?)\n?```/s', $text, $matches)) {
+            $candidate = trim($matches[1]);
+            if (str_starts_with($candidate, '{') && $this->hasBalancedBraces($candidate)) {
+                return $candidate;
+            }
         }
 
         $start = strpos($text, '{');
-        $end = strrpos($text, '}');
-        if ($start !== false && $end !== false && $end > $start) {
-            return substr($text, $start, $end - $start + 1);
+        if ($start === false) {
+            return null;
+        }
+
+        $depth = 0;
+        $inString = false;
+        for ($i = $start; $i < strlen($text); $i++) {
+            $ch = $text[$i];
+            if ($ch === '"' && ($i === 0 || $text[$i - 1] !== '\\')) {
+                $inString = !$inString;
+            }
+            if (!$inString) {
+                if ($ch === '{') {
+                    $depth++;
+                } elseif ($ch === '}') {
+                    $depth--;
+                    if ($depth === 0) {
+                        return substr($text, $start, $i - $start + 1);
+                    }
+                }
+            }
         }
 
         return null;
+    }
+
+    protected function hasBalancedBraces(string $text): bool
+    {
+        $depth = 0;
+        $inString = false;
+        for ($i = 0; $i < strlen($text); $i++) {
+            if ($text[$i] === '"' && ($i === 0 || $text[$i - 1] !== '\\')) {
+                $inString = !$inString;
+            }
+            if (!$inString) {
+                if ($text[$i] === '{') {
+                    $depth++;
+                } elseif ($text[$i] === '}') {
+                    $depth--;
+                }
+            }
+        }
+        return $depth === 0;
     }
 
     protected function getSalesSummary(): array

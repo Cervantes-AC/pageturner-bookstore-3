@@ -31,84 +31,125 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
             </div>
             <span class="font-heading text-lg font-bold text-parchment-100">Admin Panel</span>
         </div>
-        <button @click="closeSidebar" class="text-parchment-400 hover:text-white p-1 rounded-lg hover:bg-ink-700 transition-colors">
+        <button @click="closeSidebar" class="text-parchment-400 hover:text-white p-1.5 rounded-lg hover:bg-ink-700 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
     </div>
 
+    {{-- Admin user info --}}
+    <div class="px-4 py-3 border-b border-ink-700/50 bg-ink-800/50">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 bg-gradient-warm rounded-full flex items-center justify-center flex-shrink-0">
+                <span class="text-sm font-bold text-white">{{ substr(auth()->user()->name, 0, 1) }}</span>
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-parchment-100 truncate">{{ auth()->user()->name }}</p>
+                <p class="text-xs text-parchment-500 truncate">{{ auth()->user()->email }}</p>
+            </div>
+        </div>
+    </div>
+
     <nav class="p-4 space-y-1">
         <a href="{{ route('admin.dashboard') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.dashboard' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.dashboard' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
             <span>Dashboard</span>
+            @if($currentRoute === 'admin.dashboard')
+                <span class="ml-auto w-1.5 h-1.5 bg-gold-400 rounded-full animate-pulse-soft"></span>
+            @endif
         </a>
 
         <div class="pt-4 pb-2">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Catalog</p>
         </div>
         <a href="{{ route('admin.books.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ str_starts_with($currentRoute, 'admin.books.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ str_starts_with($currentRoute, 'admin.books.') ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
             <span>Manage Books</span>
+            @if(str_starts_with($currentRoute, 'admin.books.'))
+                <span class="ml-auto w-1.5 h-1.5 bg-gold-400 rounded-full animate-pulse-soft"></span>
+            @endif
         </a>
         <a href="{{ route('admin.categories.create') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.categories.create' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.categories.create' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+            </div>
             <span>Add Category</span>
+            @if($currentRoute === 'admin.categories.create')
+                <span class="ml-auto w-1.5 h-1.5 bg-gold-400 rounded-full animate-pulse-soft"></span>
+            @endif
         </a>
         <a href="{{ route('admin.books.create') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.books.create' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.books.create' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+            </div>
             <span>Add Book</span>
+            @if($currentRoute === 'admin.books.create')
+                <span class="ml-auto w-1.5 h-1.5 bg-gold-400 rounded-full animate-pulse-soft"></span>
+            @endif
         </a>
 
         <div class="pt-4 pb-2">
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Data</p>
         </div>
         <a href="{{ route('admin.import-export.import') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.import-export.import' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.import-export.import' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+            </div>
             <span>Import</span>
         </a>
         <a href="{{ route('admin.import-export.export') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.import-export.export' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.import-export.export' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+            </div>
             <span>Export</span>
         </a>
         <a href="{{ route('admin.import-export.exports') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.import-export.exports' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.import-export.exports' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
             <span>Export Logs</span>
         </a>
         <a href="{{ route('admin.import-export.imports') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.import-export.imports' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.import-export.imports' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
             <span>Import Logs</span>
         </a>
 
@@ -116,11 +157,13 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Insights</p>
         </div>
         <a href="{{ route('admin.analytics.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ str_starts_with($currentRoute, 'admin.analytics.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ str_starts_with($currentRoute, 'admin.analytics.') ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
             <span>Analytics</span>
         </a>
 
@@ -128,11 +171,13 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">Users</p>
         </div>
         <a href="{{ route('admin.users.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ str_starts_with($currentRoute, 'admin.users.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ str_starts_with($currentRoute, 'admin.users.') ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+            </div>
             <span>Manage Users</span>
         </a>
 
@@ -140,27 +185,33 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">System</p>
         </div>
         <a href="{{ route('admin.audit.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.audit.index' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.audit.index' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+            </div>
             <span>Audit Log</span>
         </a>
         <a href="{{ route('admin.backup.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.backup.index' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.backup.index' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </div>
             <span>Backup</span>
         </a>
         <a href="{{ route('admin.rate-limits.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.rate-limits.index' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.rate-limits.index' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
             <span>Rate Limits</span>
         </a>
 
@@ -168,19 +219,23 @@ $currentRoute = request()->route() ? request()->route()->getName() : '';
             <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-400">AI</p>
         </div>
         <a href="{{ route('admin.ai-reports.index') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ str_starts_with($currentRoute, 'admin.ai-reports.') ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ str_starts_with($currentRoute, 'admin.ai-reports.') ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
             <span>AI Reports</span>
         </a>
         <a href="{{ route('admin.ai-reports.usage') }}"
-           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  {{ $currentRoute === 'admin.ai-reports.usage' ? 'text-gold-400 bg-ink-700/50' : 'text-parchment-300 hover:text-white hover:bg-ink-700' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+           class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                  {{ $currentRoute === 'admin.ai-reports.usage' ? 'text-gold-400 bg-ink-700/50 shadow-sm' : 'text-parchment-300 hover:text-white hover:bg-ink-700 hover:translate-x-0.5' }}">
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
             <span>Usage Analytics</span>
         </a>
     </nav>

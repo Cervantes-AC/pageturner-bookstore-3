@@ -45,6 +45,7 @@ class ImportExportController extends Controller
             'filename' => $originalName,
             'type' => 'book',
             'total_rows' => 0,
+            'processed_rows' => 0,
             'status' => 'processing',
             'file_path' => $path,
         ]);
@@ -213,6 +214,8 @@ class ImportExportController extends Controller
             'user_id' => auth()->id(),
             'filename' => $file->getClientOriginalName(),
             'type' => 'user',
+            'total_rows' => 0,
+            'processed_rows' => 0,
             'status' => 'pending',
             'file_path' => $path,
         ]);

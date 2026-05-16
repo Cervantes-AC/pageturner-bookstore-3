@@ -1,38 +1,71 @@
 @props(['book'])
-<div class="group">
-    <div class="card h-full flex flex-col bg-white">
-        <div class="relative h-64 bg-gradient-to-br from-parchment-100 to-parchment-200 flex items-center justify-center overflow-hidden">
+<div class="group card-3d">
+    <div class="card h-full flex flex-col bg-white card-3d-inner">
+        <div class="relative h-56 bg-gradient-to-br from-parchment-100 to-parchment-200 flex items-center justify-center overflow-hidden image-zoom">
             @if($book->cover_image)
                 <img src="{{ $book->cover_url }}"
-                     alt="{{ $book->title }}" 
-                     class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500">
+                     alt="{{ $book->title }}"
+                     class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700">
             @else
-                <svg class="w-24 h-24 text-parchment-400 group-hover:text-gold-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-20 h-20 text-parchment-400 group-hover:text-gold-500 transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
             @endif
+
+            {{-- Badges --}}
             @if($book->stock_quantity <= 5 && $book->stock_quantity > 0)
                 <div class="absolute top-3 right-3">
-                    <span class="badge badge-warning shadow-lg">Only {{ $book->stock_quantity }} left</span>
+                    <span class="badge badge-warning shadow-lg animate-pulse-soft">Only {{ $book->stock_quantity }} left</span>
                 </div>
             @elseif($book->stock_quantity == 0)
                 <div class="absolute top-3 right-3">
                     <span class="badge badge-danger shadow-lg">Out of Stock</span>
                 </div>
             @endif
+            @if($book->created_at->isAfter(now()->subDays(7)))
+                <div class="absolute top-3 left-3">
+                    <span class="badge bg-emerald-500 text-white shadow-lg text-xs">New</span>
+                </div>
+            @endif
+
+            {{-- Quick View Overlay (Alpine.js) --}}
+            <div x-show="showQuick"
+                 x-transition:enter="transition-all duration-200 ease-out"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition-all duration-150 ease-in"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="absolute bottom-3 left-3 right-3 flex gap-2" style="display: none;">
+                <a href="{{ route('books.show', $book) }}"
+                   class="flex-1 bg-white/90 backdrop-blur-sm text-ink-900 text-xs font-semibold py-2 rounded-lg hover:bg-white transition-all text-center shadow-lg">
+                    Quick View
+                </a>
+                @auth
+                    @if($book->stock_quantity > 0)
+                        <form action="{{ route('cart.add', $book) }}" method="POST" class="flex-1">
+                            @csrf
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="w-full bg-gold-600/90 backdrop-blur-sm text-white text-xs font-semibold py-2 rounded-lg hover:bg-gold-600 transition-all text-center shadow-lg">
+                                Add to Cart
+                            </button>
+                        </form>
+                    @endif
+                @endauth
+            </div>
         </div>
-        
+
         <div class="p-5 flex flex-col flex-grow">
             <div class="mb-2">
                 <span class="text-xs font-semibold text-gold-700 uppercase tracking-widest">{{ $book->category->name }}</span>
             </div>
-            
-            <h3 class="font-heading font-bold text-lg text-ink-900 mb-1 line-clamp-2 group-hover:text-gold-700 transition-colors">
+
+            <h3 class="font-heading font-bold text-lg text-ink-900 mb-1 line-clamp-2 group-hover:text-gold-700 transition-colors duration-200">
                 {{ $book->title }}
             </h3>
-            
+
             <p class="text-ink-400 text-sm mb-3">by {{ $book->author }}</p>
-            
+
             <div class="flex items-center mb-3">
                 <div class="flex items-center">
                     @for($i = 1; $i <= 5; $i++)
@@ -43,17 +76,17 @@
                 </div>
                 <span class="ml-2 text-sm text-ink-400">({{ $book->reviews->count() }})</span>
             </div>
-            
+
             <div class="mt-auto">
                 <div class="flex items-baseline mb-4">
                     <span class="font-heading text-2xl font-bold text-gold-700">&#x20B1;{{ number_format($book->price, 2) }}</span>
                 </div>
-                
+
                 <a href="{{ route('books.show', $book) }}"
-                   class="block text-center bg-parchment-100 text-ink-700 py-2.5 rounded-lg hover:bg-parchment-200 transition-all font-medium mb-2">
+                   class="block text-center bg-parchment-100 text-ink-700 py-2.5 rounded-lg hover:bg-parchment-200 transition-all font-medium mb-2 group-hover:bg-gold-50 group-hover:text-gold-700">
                     View Details
                 </a>
-                
+
                 @auth
                     @if($book->stock_quantity > 0)
                         <form action="{{ route('cart.add', $book) }}" method="POST">
@@ -72,7 +105,7 @@
                         </button>
                     @endif
                 @else
-                    <a href="{{ route('login') }}" class="block text-center bg-gold-600 hover:bg-gold-700 text-white py-2.5 rounded-lg font-medium transition-colors">
+                    <a href="{{ route('login') }}" class="block text-center bg-gold-600 hover:bg-gold-700 text-white py-2.5 rounded-lg font-medium transition-all duration-200 hover:shadow-lg">
                         Login to Purchase
                     </a>
                 @endauth

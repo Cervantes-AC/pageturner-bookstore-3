@@ -3,9 +3,9 @@
 
 @section('content')
     {{-- Welcome Section --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-8 mb-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-8 mb-8 animate-fade-in-up">
         <div class="flex items-center space-x-5">
-            <div class="w-16 h-16 bg-gold-100 rounded-2xl flex items-center justify-center">
+            <div class="w-16 h-16 bg-gradient-to-br from-gold-100 to-amber-100 rounded-2xl flex items-center justify-center">
                 <svg class="w-8 h-8 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -18,8 +18,8 @@
     </div>
 
     {{-- Account Status --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-parchment-200 flex items-center space-x-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 animate-fade-in-up stagger-1">
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-parchment-200 flex items-center space-x-4 hover:shadow-md transition-all duration-200">
             <div class="w-10 h-10 {{ auth()->user()->hasVerifiedEmail() ? 'bg-emerald-100' : 'bg-amber-100' }} rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 {{ auth()->user()->hasVerifiedEmail() ? 'text-emerald-600' : 'text-amber-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -32,7 +32,7 @@
                 </p>
             </div>
         </div>
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-parchment-200 flex items-center space-x-4">
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-parchment-200 flex items-center space-x-4 hover:shadow-md transition-all duration-200">
             <div class="w-10 h-10 {{ auth()->user()->two_factor_enabled ? 'bg-emerald-100' : 'bg-ink-100' }} rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 {{ auth()->user()->two_factor_enabled ? 'text-emerald-600' : 'text-ink-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -48,20 +48,20 @@
     </div>
 
     {{-- Order Summary --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 animate-fade-in-up stagger-2">
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6 hover:shadow-md transition-all duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-heading text-lg font-semibold text-ink-900">Order Summary</h3>
-                    <a href="{{ route('orders.index') }}" class="text-sm text-gold-600 hover:text-gold-700 font-medium">View all</a>
+                    <a href="{{ route('orders.index') }}" class="btn-link text-sm">View all</a>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <div class="text-center p-3 bg-parchment-100 rounded-lg">
+                    <div class="text-center p-3 bg-parchment-100 rounded-lg hover:bg-parchment-200 transition-colors">
                         <p class="font-heading text-2xl font-bold text-ink-900">{{ $totalOrders }}</p>
                         <p class="text-xs text-ink-400">Total Orders</p>
                     </div>
                     @foreach(['pending', 'processing', 'completed'] as $status)
-                        <div class="text-center p-3 bg-parchment-100 rounded-lg">
+                        <div class="text-center p-3 bg-parchment-100 rounded-lg hover:bg-parchment-200 transition-colors">
                             <p class="font-heading text-2xl font-bold
                                 {{ $status === 'pending' ? 'text-amber-600' : ($status === 'processing' ? 'text-blue-600' : 'text-emerald-600') }}">
                                 {{ $orderStatusSummary[$status] ?? 0 }}
@@ -72,16 +72,21 @@
                 </div>
 
                 @if($recentOrders->count() > 0)
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         @foreach($recentOrders as $order)
-                            <a href="{{ route('orders.show', $order) }}" class="flex items-center justify-between p-3 bg-parchment-50 rounded-lg hover:bg-parchment-100 transition-colors">
-                                <div>
-                                    <span class="font-medium text-ink-700">Order #{{ $order->id }}</span>
-                                    <span class="text-ink-400 text-sm ml-2">{{ $order->created_at->format('M d, Y') }}</span>
+                            <a href="{{ route('orders.show', $order) }}" class="flex items-center justify-between p-3 bg-parchment-50 rounded-lg hover:bg-parchment-100 hover:translate-x-0.5 transition-all duration-200">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-ink-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-xs font-bold text-ink-600">#{{ $order->id }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-ink-700">Order #{{ $order->id }}</span>
+                                        <span class="text-ink-400 text-sm ml-2">{{ $order->created_at->format('M d, Y') }}</span>
+                                    </div>
                                 </div>
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm font-semibold text-gold-700">₱{{ number_format($order->total_amount, 2) }}</span>
-                                    <span class="px-2 py-1 rounded text-xs font-medium
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium
                                         {{ $order->status === 'completed' ? 'bg-emerald-100 text-emerald-700' : '' }}
                                         {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
                                         {{ $order->status === 'processing' ? 'bg-blue-100 text-blue-700' : '' }}
@@ -93,17 +98,17 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="text-ink-400 text-sm text-center py-4">No orders yet. <a href="{{ route('books.index') }}" class="text-gold-600 hover:underline">Start shopping</a></p>
+                    <p class="text-ink-400 text-sm text-center py-4">No orders yet. <a href="{{ route('books.index') }}" class="text-gold-600 hover:underline font-medium">Start shopping</a></p>
                 @endif
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6 hover:shadow-md transition-all duration-200">
                 <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Recently Purchased Books</h3>
                 @if($recentOrderBooks->count() > 0)
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         @foreach($recentOrderBooks as $book)
-                            <a href="{{ route('books.show', $book) }}" class="flex items-center space-x-3 p-3 bg-parchment-50 rounded-lg hover:bg-parchment-100 transition-colors">
-                                <div class="w-10 h-10 bg-gold-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <a href="{{ route('books.show', $book) }}" class="flex items-center space-x-3 p-3 bg-parchment-50 rounded-lg hover:bg-parchment-100 hover:translate-x-0.5 transition-all duration-200">
+                                <div class="w-10 h-10 bg-gradient-to-br from-gold-100 to-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <svg class="w-5 h-5 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                     </svg>
@@ -123,10 +128,10 @@
 
         {{-- Side Panel --}}
         <div class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6 hover:shadow-md transition-all duration-200">
                 <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Your Reviews</h3>
                 @if($recentReviews->count() > 0)
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                         @foreach($recentReviews as $review)
                             <div class="text-sm">
                                 <div class="flex items-center space-x-1 mb-1">
@@ -137,7 +142,7 @@
                                     @endfor
                                 </div>
                                 <p class="text-ink-400 truncate">"{{ Str::limit($review->comment ?? 'No comment', 50) }}"</p>
-                                <p class="text-ink-400 text-xs mt-0.5">on <a href="{{ route('books.show', $review->book) }}" class="text-gold-600 hover:underline">{{ $review->book->title ?? 'Unknown' }}</a></p>
+                                <p class="text-ink-400 text-xs mt-0.5">on <a href="{{ route('books.show', $review->book) }}" class="text-gold-600 hover:underline font-medium">{{ $review->book->title ?? 'Unknown' }}</a></p>
                             </div>
                         @endforeach
                     </div>
@@ -146,19 +151,25 @@
                 @endif
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-parchment-200 p-6 hover:shadow-md transition-all duration-200">
                 <h3 class="font-heading text-lg font-semibold text-ink-900 mb-4">Quick Links</h3>
-                <div class="space-y-3">
-                    <a href="{{ route('books.index') }}" class="flex items-center space-x-3 p-3 bg-gold-50 rounded-lg hover:bg-gold-100 transition-colors">
-                        <svg class="w-5 h-5 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                <div class="space-y-2">
+                    <a href="{{ route('books.index') }}" class="flex items-center space-x-3 p-3 bg-gold-50 rounded-lg hover:bg-gold-100 hover:translate-x-0.5 transition-all duration-200">
+                        <div class="w-8 h-8 bg-gold-200/50 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        </div>
                         <span class="text-sm font-medium text-ink-700">Browse Books</span>
                     </a>
-                    <a href="{{ route('orders.index') }}" class="flex items-center space-x-3 p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                    <a href="{{ route('orders.index') }}" class="flex items-center space-x-3 p-3 bg-amber-50 rounded-lg hover:bg-amber-100 hover:translate-x-0.5 transition-all duration-200">
+                        <div class="w-8 h-8 bg-amber-200/50 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                        </div>
                         <span class="text-sm font-medium text-ink-700">Order History</span>
                     </a>
-                    <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 hover:translate-x-0.5 transition-all duration-200">
+                        <div class="w-8 h-8 bg-blue-200/50 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </div>
                         <span class="text-sm font-medium text-ink-700">Profile & Security</span>
                     </a>
                 </div>

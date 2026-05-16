@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Order;
-use App\Models\User;
 use App\Services\OrderService;
 use App\Notifications\OrderPlaced;
 use App\Notifications\OrderStatusChanged;

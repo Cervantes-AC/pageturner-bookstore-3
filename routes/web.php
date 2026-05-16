@@ -83,11 +83,11 @@ Route::middleware(['auth', 'verified', '2fa', 'role:admin'])->prefix('admin')->n
 
     // Book management
     Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
-    Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
-    Route::post('/books', [BookController::class, 'store'])->name('books.store');
-    Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
-    Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
-    Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
+    Route::get('/books/create', [AdminBookController::class, 'create'])->name('books.create');
+    Route::post('/books', [AdminBookController::class, 'store'])->name('books.store');
+    Route::get('/books/{book}/edit', [AdminBookController::class, 'edit'])->name('books.edit');
+    Route::put('/books/{book}', [AdminBookController::class, 'update'])->name('books.update');
+    Route::delete('/books/{book}', [AdminBookController::class, 'destroy'])->name('books.destroy');
 
     // User management
     Route::get('/users', [UserController::class, 'index'])->name('users.index');

@@ -31,7 +31,7 @@ class AuditController extends Controller
         }
 
         $logs = $query->orderBy('created_at', 'desc')->paginate(20);
-        $events = AuditLog::distinct('event')->pluck('event');
+        $events = AuditLog::select('event')->distinct()->pluck('event');
 
         return view('admin.audit.index', compact('logs', 'events'));
     }
