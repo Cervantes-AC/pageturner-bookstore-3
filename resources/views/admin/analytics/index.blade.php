@@ -5,10 +5,6 @@
     <p class="text-ink-400 mt-1">Visual insights into your bookstore performance</p>
 @endsection
 
-@push('scripts')
-    @vite(['resources/js/analytics.js'])
-@endpush
-
 @section('content')
     <div id="analytics-content">
         {{-- Summary Cards --}}
@@ -86,6 +82,10 @@
         <p>Loading analytics data...</p>
     </div>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/analytics.js'])
+@endpush
 
 @push('scripts')
 <script>

@@ -28,11 +28,25 @@
                         ];
                     @endphp
 
+                    @php
+                        $colorMap = [
+                            'indigo' => ['border' => 'border-indigo-500', 'bg' => 'bg-indigo-50', 'hoverBorder' => 'hover:border-indigo-300', 'hoverBg' => 'hover:bg-indigo-50', 'iconBg' => 'bg-indigo-100', 'iconColor' => 'text-indigo-600'],
+                            'emerald' => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-50', 'hoverBorder' => 'hover:border-emerald-300', 'hoverBg' => 'hover:bg-emerald-50', 'iconBg' => 'bg-emerald-100', 'iconColor' => 'text-emerald-600'],
+                            'amber' => ['border' => 'border-amber-500', 'bg' => 'bg-amber-50', 'hoverBorder' => 'hover:border-amber-300', 'hoverBg' => 'hover:bg-amber-50', 'iconBg' => 'bg-amber-100', 'iconColor' => 'text-amber-600'],
+                            'blue' => ['border' => 'border-blue-500', 'bg' => 'bg-blue-50', 'hoverBorder' => 'hover:border-blue-300', 'hoverBg' => 'hover:bg-blue-50', 'iconBg' => 'bg-blue-100', 'iconColor' => 'text-blue-600'],
+                            'purple' => ['border' => 'border-purple-500', 'bg' => 'bg-purple-50', 'hoverBorder' => 'hover:border-purple-300', 'hoverBg' => 'hover:bg-purple-50', 'iconBg' => 'bg-purple-100', 'iconColor' => 'text-purple-600'],
+                            'rose' => ['border' => 'border-rose-500', 'bg' => 'bg-rose-50', 'hoverBorder' => 'hover:border-rose-300', 'hoverBg' => 'hover:bg-rose-50', 'iconBg' => 'bg-rose-100', 'iconColor' => 'text-rose-600'],
+                            'orange' => ['border' => 'border-orange-500', 'bg' => 'bg-orange-50', 'hoverBorder' => 'hover:border-orange-300', 'hoverBg' => 'hover:bg-orange-50', 'iconBg' => 'bg-orange-100', 'iconColor' => 'text-orange-600'],
+                            'red' => ['border' => 'border-red-500', 'bg' => 'bg-red-50', 'hoverBorder' => 'hover:border-red-300', 'hoverBg' => 'hover:bg-red-50', 'iconBg' => 'bg-red-100', 'iconColor' => 'text-red-600'],
+                        ];
+                    @endphp
                     @foreach($types as $key => $type)
+                        @php $c = $colorMap[$type['color']]; @endphp
                         <button type="button" data-type="{{ $key }}"
-                                class="report-type-card text-left p-4 rounded-xl border-2 border-parchment-200 hover:border-{{ $type['color'] }}-300 hover:bg-{{ $type['color'] }}-50 transition-all {{ old('report_type') === $key ? 'border-' . $type['color'] . '-500 bg-' . $type['color'] . '-50' : '' }}">
-                            <div class="w-9 h-9 rounded-lg bg-{{ $type['color'] }}-100 flex items-center justify-center mb-2">
-                                <svg class="w-5 h-5 text-{{ $type['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                data-color="{{ $type['color'] }}"
+                                class="report-type-card text-left p-4 rounded-xl border-2 border-parchment-200 {{ $c['hoverBorder'] }} {{ $c['hoverBg'] }} transition-all {{ old('report_type') === $key ? $c['border'] . ' ' . $c['bg'] : '' }}">
+                            <div class="w-9 h-9 rounded-lg {{ $c['iconBg'] }} flex items-center justify-center mb-2">
+                                <svg class="w-5 h-5 {{ $c['iconColor'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $type['icon'] }}" />
                                 </svg>
                             </div>
@@ -135,24 +149,31 @@
 
 @push('scripts')
 <script>
+    const colorMap = {
+        overview: { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+        sales: { border: 'border-emerald-500', bg: 'bg-emerald-50' },
+        inventory: { border: 'border-amber-500', bg: 'bg-amber-50' },
+        users: { border: 'border-blue-500', bg: 'bg-blue-50' },
+        reviews: { border: 'border-purple-500', bg: 'bg-purple-50' },
+        categories: { border: 'border-rose-500', bg: 'bg-rose-50' },
+        bestsellers: { border: 'border-orange-500', bg: 'bg-orange-50' },
+        alerts: { border: 'border-red-500', bg: 'bg-red-50' },
+    };
     document.querySelectorAll('.report-type-card').forEach(card => {
         card.addEventListener('click', function() {
             document.querySelectorAll('.report-type-card').forEach(c => {
-                c.classList.remove('border-indigo-500', 'bg-indigo-50', 'border-emerald-500', 'bg-emerald-50',
-                    'border-amber-500', 'bg-amber-50', 'border-blue-500', 'bg-blue-50',
-                    'border-purple-500', 'bg-purple-50', 'border-rose-500', 'bg-rose-50',
-                    'border-orange-500', 'bg-orange-50', 'border-red-500', 'bg-red-50');
+                const type = c.dataset.type;
+                const colors = colorMap[type];
+                if (colors) {
+                    c.classList.remove(colors.border, colors.bg);
+                }
                 c.classList.add('border-parchment-200');
             });
             this.classList.remove('border-parchment-200');
-            const color = this.dataset.type === 'overview' ? 'indigo' :
-                          this.dataset.type === 'sales' ? 'emerald' :
-                          this.dataset.type === 'inventory' ? 'amber' :
-                          this.dataset.type === 'users' ? 'blue' :
-                          this.dataset.type === 'reviews' ? 'purple' :
-                          this.dataset.type === 'categories' ? 'rose' :
-                          this.dataset.type === 'bestsellers' ? 'orange' : 'red';
-            this.classList.add('border-' + color + '-500', 'bg-' + color + '-50');
+            const colors = colorMap[this.dataset.type];
+            if (colors) {
+                this.classList.add(colors.border, colors.bg);
+            }
             document.getElementById('report_type').value = this.dataset.type;
         });
     });

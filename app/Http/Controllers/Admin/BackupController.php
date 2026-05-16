@@ -55,7 +55,10 @@ class BackupController extends Controller
             ]);
         } finally {
             // Close database connections to prevent connection pool exhaustion
-            DB::disconnect();
+            // (skip for SQLite since :memory: databases are destroyed on disconnect)
+            if (DB::getDriverName() !== 'sqlite') {
+                DB::disconnect();
+            }
         }
 
         if ($monitor->status === 'failed') {

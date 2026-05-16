@@ -61,7 +61,13 @@ class BookController extends Controller
     public function show(Book $book)
     {
         $book->load(['category', 'reviews.user']);
-        return view('books.show', compact('book'));
+        
+        // Get recommendations
+        $recommendationService = app(\App\Services\BookRecommendationService::class);
+        $similarBooks = $recommendationService->getSimilarBooks($book, 5);
+        $booksByAuthor = $recommendationService->getBooksByAuthor($book, 3);
+        
+        return view('books.show', compact('book', 'similarBooks', 'booksByAuthor'));
     }
 
     public function edit(Book $book)

@@ -105,6 +105,12 @@ class AIReportGeneratorService
             $report->update(['status' => 'generating']);
 
             $retrievedData = $this->retrieveRelevantData($report->query);
+            
+            Log::info('Retrieved data for report', [
+                'report_id' => $report->id,
+                'data_keys' => array_keys($retrievedData),
+                'data_size' => strlen(json_encode($retrievedData)),
+            ]);
 
             $prompt = $this->buildReportPrompt($report->query, $retrievedData);
 
@@ -117,7 +123,22 @@ class AIReportGeneratorService
             $this->modelOverride = null;
             $this->providerOverride = null;
 
+            Log::info('AI response received', [
+                'report_id' => $report->id,
+                'provider' => $result['provider'],
+                'model' => $result['model'] ?? 'unknown',
+                'tokens' => $result['tokens'] ?? 0,
+                'response_length' => strlen($result['content']),
+            ]);
+
             $parsed = $this->parseAIResponse($result['content']);
+
+            Log::info('Response parsed', [
+                'report_id' => $report->id,
+                'has_summary' => !empty($parsed['summary']),
+                'insights_count' => count($parsed['insights'] ?? []),
+                'recommendations_count' => count($parsed['recommendations'] ?? []),
+            ]);
 
             $reportData = $retrievedData;
             if (!empty($parsed['introduction'])) {
@@ -142,10 +163,16 @@ class AIReportGeneratorService
                 'completed_at' => now(),
             ]);
 
+            Log::info('Report generation completed', [
+                'report_id' => $report->id,
+                'status' => 'completed',
+            ]);
+
         } catch (\Exception $e) {
             Log::error('AI report generation failed: ' . $e->getMessage(), [
                 'report_id' => $report->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $report->update([
@@ -298,27 +325,36 @@ DATABASE SCHEMA:
 RETRIEVED DATA:
 {$dataJson}
 
-INSTRUCTIONS - Respond with ONLY a valid JSON object containing these fields:
+CRITICAL INSTRUCTIONS - You MUST respond with ONLY a valid JSON object (no markdown, no code blocks, just raw JSON) containing these exact fields:
 
-1. "title": A professional report title (max 12 words, e.g. "PageTurner Quarterly Sales Performance Report")
+{
+  "title": "A professional report title (max 12 words, e.g. PageTurner Quarterly Sales Performance Report)",
+  "executive_summary": "2-3 paragraph executive overview covering the most critical findings, written in formal business language.",
+  "introduction": "1 paragraph explaining the purpose, scope, and period covered by this report.",
+  "findings": [
+    {
+      "section": "Section heading (e.g. Sales Performance, Inventory Analysis, User Activity)",
+      "content": "2-4 sentences of detailed analysis with specific numbers and percentages",
+      "status": "positive or warning or critical"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Specific actionable recommendation",
+      "rationale": "Brief explanation of why this action is needed",
+      "priority": "high or medium or low"
+    }
+  ],
+  "conclusion": "1 paragraph synthesizing the findings and providing forward-looking perspective."
+}
 
-2. "executive_summary": 2-3 paragraph executive overview covering the most critical findings, written in formal business language.
-
-3. "introduction": 1 paragraph explaining the purpose, scope, and period covered by this report.
-
-4. "findings": An array of 3-6 finding objects, each with:
-   - "section": Section heading (e.g. "Sales Performance", "Inventory Analysis", "User Activity")
-   - "content": 2-4 sentences of detailed analysis with specific numbers and percentages
-   - "status": "positive", "warning", or "critical"
-
-5. "recommendations": An array of 2-4 recommendation objects, each with:
-   - "action": Specific actionable recommendation
-   - "rationale": Brief explanation of why this action is needed
-   - "priority": "high", "medium", or "low"
-
-6. "conclusion": 1 paragraph synthesizing the findings and providing forward-looking perspective.
-
-Write in formal business tone. Use specific data points (revenue, percentages, counts) throughout. Be accurate—only state what the data supports.
+IMPORTANT:
+- Write in formal business tone
+- Use specific data points (revenue, percentages, counts) from the RETRIEVED DATA
+- Be accurate—only state what the data supports
+- Return ONLY valid JSON, no additional text before or after
+- Do not use markdown code blocks
+- Ensure all quotes are properly escaped
 PROMPT;
     }
 
@@ -326,6 +362,7 @@ PROMPT;
     {
         $content = trim($content);
 
+        // Try to extract JSON from the response
         $json = $this->extractJson($content);
 
         if ($json) {
@@ -333,34 +370,154 @@ PROMPT;
             if (is_array($parsed)) {
                 return [
                     'title' => $parsed['title'] ?? 'AI-Generated Report',
-                    'summary' => $parsed['executive_summary'] ?? $parsed['summary'] ?? $content,
-                    'introduction' => $parsed['introduction'] ?? '',
-                    'insights' => $parsed['findings'] ?? $parsed['insights'] ?? [],
-                    'recommendations' => $parsed['recommendations'] ?? [],
-                    'conclusion' => $parsed['conclusion'] ?? '',
+                    'summary' => $this->cleanText($parsed['executive_summary'] ?? $parsed['summary'] ?? ''),
+                    'introduction' => $this->cleanText($parsed['introduction'] ?? ''),
+                    'insights' => $this->cleanInsights($parsed['findings'] ?? $parsed['insights'] ?? []),
+                    'recommendations' => $this->cleanRecommendations($parsed['recommendations'] ?? []),
+                    'conclusion' => $this->cleanText($parsed['conclusion'] ?? ''),
                 ];
             }
         }
 
+        // If JSON extraction failed, try to extract text sections from the response
+        Log::warning('Failed to parse AI response as JSON, attempting text extraction', [
+            'content_preview' => substr($content, 0, 200),
+        ]);
+
+        // Extract sections from plain text response
+        $summary = $this->extractSection($content, ['executive summary', 'summary', 'overview']);
+        $introduction = $this->extractSection($content, ['introduction', 'purpose']);
+        $conclusion = $this->extractSection($content, ['conclusion', 'summary']);
+        
+        // Extract findings/insights from bullet points or numbered lists
+        $insights = $this->extractListItems($content, ['findings', 'insights', 'analysis']);
+        $recommendations = $this->extractListItems($content, ['recommendations', 'actions', 'suggestions']);
+
         return [
             'title' => 'AI-Generated Report',
-            'summary' => $content,
-            'introduction' => '',
-            'insights' => [],
-            'recommendations' => [],
-            'conclusion' => '',
+            'summary' => $summary ?: $this->cleanText(substr($content, 0, 500)),
+            'introduction' => $introduction,
+            'insights' => $insights,
+            'recommendations' => $recommendations,
+            'conclusion' => $conclusion,
         ];
+    }
+
+    protected function extractSection(string $content, array $keywords): string
+    {
+        $lines = explode("\n", $content);
+        $capturing = false;
+        $section = [];
+
+        foreach ($lines as $line) {
+            $lowerLine = strtolower($line);
+            
+            // Check if this line contains a section header
+            foreach ($keywords as $keyword) {
+                if (str_contains($lowerLine, $keyword)) {
+                    $capturing = true;
+                    continue 2;
+                }
+            }
+
+            // If we're capturing and hit another header, stop
+            if ($capturing && preg_match('/^#+\s|^[A-Z][^a-z]*:/', $line) && !empty($section)) {
+                break;
+            }
+
+            // Capture content
+            if ($capturing && !empty(trim($line))) {
+                $section[] = trim($line);
+            }
+        }
+
+        return $this->cleanText(implode(' ', $section));
+    }
+
+    protected function extractListItems(string $content, array $keywords): array
+    {
+        $lines = explode("\n", $content);
+        $items = [];
+        $capturing = false;
+
+        foreach ($lines as $line) {
+            $lowerLine = strtolower($line);
+            
+            // Check if this line contains a section header
+            foreach ($keywords as $keyword) {
+                if (str_contains($lowerLine, $keyword)) {
+                    $capturing = true;
+                    continue 2;
+                }
+            }
+
+            // If we're capturing and hit another header, stop
+            if ($capturing && preg_match('/^#+\s|^[A-Z][^a-z]*:/', $line) && !empty($items)) {
+                break;
+            }
+
+            // Extract bullet points or numbered items
+            if ($capturing && preg_match('/^[\s]*[-•*]\s+(.+)$|^[\s]*\d+\.\s+(.+)$/', $line, $matches)) {
+                $itemText = $matches[1] ?? $matches[2];
+                $items[] = [
+                    'section' => 'Finding',
+                    'content' => $this->cleanText($itemText),
+                    'status' => 'info',
+                ];
+            }
+        }
+
+        return $items;
+    }
+
+    protected function cleanText(string $text): string
+    {
+        // Remove markdown code block markers
+        $text = preg_replace('/```(?:json|markdown|text)?\s*\n?/i', '', $text);
+        $text = preg_replace('/```\s*$/i', '', $text);
+        
+        // Remove leading/trailing whitespace
+        $text = trim($text);
+        
+        return $text;
+    }
+
+    protected function cleanInsights(array $insights): array
+    {
+        return array_map(function ($insight) {
+            return [
+                'section' => $this->cleanText($insight['section'] ?? $insight['finding'] ?? ''),
+                'content' => $this->cleanText($insight['content'] ?? $insight['finding'] ?? ''),
+                'status' => $insight['status'] ?? 'info',
+            ];
+        }, $insights);
+    }
+
+    protected function cleanRecommendations(array $recommendations): array
+    {
+        return array_map(function ($rec) {
+            return [
+                'action' => $this->cleanText($rec['action'] ?? $rec['recommendation'] ?? ''),
+                'rationale' => $this->cleanText($rec['rationale'] ?? ''),
+                'priority' => $rec['priority'] ?? 'medium',
+            ];
+        }, $recommendations);
     }
 
     protected function extractJson(string $text): ?string
     {
+        // First, try to extract from markdown code blocks
         if (preg_match('/```(?:json)?\s*\n?(.*?)\n?```/s', $text, $matches)) {
             $candidate = trim($matches[1]);
             if (str_starts_with($candidate, '{') && $this->hasBalancedBraces($candidate)) {
-                return $candidate;
+                $decoded = json_decode($candidate, true);
+                if ($decoded !== null) {
+                    return $candidate;
+                }
             }
         }
 
+        // If that fails, try to find JSON object directly
         $start = strpos($text, '{');
         if ($start === false) {
             return null;
@@ -368,18 +525,50 @@ PROMPT;
 
         $depth = 0;
         $inString = false;
+        $escaped = false;
+        $bestMatch = null;
+        $bestDepth = 0;
+        
         for ($i = $start; $i < strlen($text); $i++) {
             $ch = $text[$i];
-            if ($ch === '"' && ($i === 0 || $text[$i - 1] !== '\\')) {
-                $inString = !$inString;
+            
+            // Handle escape sequences
+            if ($escaped) {
+                $escaped = false;
+                continue;
             }
+            
+            if ($ch === '\\') {
+                $escaped = true;
+                continue;
+            }
+            
+            // Handle string boundaries
+            if ($ch === '"') {
+                $inString = !$inString;
+                continue;
+            }
+            
+            // Count braces only outside strings
             if (!$inString) {
                 if ($ch === '{') {
                     $depth++;
                 } elseif ($ch === '}') {
                     $depth--;
                     if ($depth === 0) {
-                        return substr($text, $start, $i - $start + 1);
+                        $json = substr($text, $start, $i - $start + 1);
+                        // Validate it's actually valid JSON
+                        $decoded = json_decode($json, true);
+                        if ($decoded !== null && is_array($decoded)) {
+                            return $json;
+                        }
+                        // If this didn't work, try to find another JSON object
+                        $start = strpos($text, '{', $i + 1);
+                        if ($start === false) {
+                            break;
+                        }
+                        $depth = 0;
+                        $i = $start - 1;
                     }
                 }
             }

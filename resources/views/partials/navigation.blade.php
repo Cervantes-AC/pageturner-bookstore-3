@@ -65,7 +65,9 @@
             {{-- Right: Actions --}}
             <div class="flex items-center space-x-1 sm:space-x-2">
                 {{-- Search Toggle --}}
-                <button @click="searchOpen = !searchOpen; if(searchOpen) $nextTick(() => $refs.searchInput?.focus())" class="text-parchment-300 hover:text-white hover:bg-ink-700/70 p-2 rounded-lg transition-all duration-200" title="Search (Ctrl+K)">
+                <button @click="searchOpen = !searchOpen; if(searchOpen) $nextTick(() => $refs.searchInput?.focus())"
+                        x-on:open-search.window="searchOpen = true; $nextTick(() => $refs.searchInput?.focus())"
+                        class="text-parchment-300 hover:text-white hover:bg-ink-700/70 p-2 rounded-lg transition-all duration-200" title="Search (Ctrl+K)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>

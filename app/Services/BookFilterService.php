@@ -83,6 +83,10 @@ class BookFilterService
             'newest' => $query->orderBy('created_at', 'desc'),
             'oldest' => $query->orderBy('created_at', 'asc'),
             'rating' => $query->orderBy('average_rating', 'desc'),
+            'bestseller' => $query->leftJoin('order_items', 'books.id', '=', 'order_items.book_id')
+                ->selectRaw('books.*, SUM(order_items.quantity) as total_sold')
+                ->groupBy('books.id')
+                ->orderByDesc('total_sold'),
             default => $query->orderBy('created_at', 'desc'),
         };
     }

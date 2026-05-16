@@ -20,6 +20,10 @@ class BookCatalogLoadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Override redis-tags cache store to array to avoid Redis dependency in tests
+        config(['cache.stores.redis-tags' => [
+            'driver' => 'array',
+        ]]);
         config(['rate-limiting.tiers.public.limit' => 1000]);
         $this->repository = app(BookRepository::class);
 

@@ -127,16 +127,15 @@ class OperationalValidationTest extends TestCase
         $admin = $this->admin();
         $backupDirectory = config('backup.backup.name');
 
-        Artisan::shouldReceive('call')
-            ->once()
+        $kernel = \Mockery::mock(\Illuminate\Foundation\Console\Kernel::class)->makePartial();
+        $kernel->shouldReceive('call')
             ->with('backup:run', ['--only-db' => true])
             ->andReturnUsing(function () use ($backupDirectory) {
                 Storage::disk('local')->put($backupDirectory . '/manual-backup.zip', 'backup-bytes');
-
                 return 0;
             });
-
-        Artisan::shouldReceive('output')->once()->andReturn('Backup completed.');
+        $kernel->shouldReceive('output')->andReturn('Backup completed.');
+        $this->app[\Illuminate\Contracts\Console\Kernel::class] = $kernel;
 
         $this->actingAs($admin)
             ->post(route('admin.backup.run'))

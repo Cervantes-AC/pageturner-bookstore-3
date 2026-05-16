@@ -142,6 +142,31 @@
         @endif
     </section>
 
+    {{-- Trending Books Section --}}
+    @if($trendingBooks->count())
+    <section class="mb-16">
+        <div class="flex items-center justify-between mb-8">
+            <div class="reveal-on-scroll">
+                <h2 class="section-heading">Trending Now</h2>
+                <p class="section-subheading">Popular picks gaining momentum</p>
+            </div>
+            <a href="{{ route('books.index') }}" class="text-gold-600 hover:text-gold-700 font-semibold inline-flex items-center group">
+                View All
+                <svg class="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            @foreach($trendingBooks as $book)
+                <div class="reveal-on-scroll">
+                    <x-book-card :book="$book" />
+                </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
+
     {{-- Testimonial Section (dummy) --}}
     <section class="mb-16">
         <div class="text-center mb-10 reveal-on-scroll">

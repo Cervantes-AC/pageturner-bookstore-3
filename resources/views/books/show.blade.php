@@ -220,3 +220,55 @@
     @endforelse
 </div>
 @endsection
+
+{{-- Recommendations Section --}}
+<div class="mt-14 animate-fade-in-up stagger-2">
+    {{-- Similar Books --}}
+    @if($similarBooks->count())
+    <section class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="font-heading text-2xl font-bold text-ink-900 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Similar Books
+                </h2>
+                <p class="text-ink-400 mt-1">You might also like these titles</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            @foreach($similarBooks as $similarBook)
+                <div class="reveal-on-scroll">
+                    <x-book-card :book="$similarBook" />
+                </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
+
+    {{-- Books by Same Author --}}
+    @if($booksByAuthor->count())
+    <section class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="font-heading text-2xl font-bold text-ink-900 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    More by {{ $book->author }}
+                </h2>
+                <p class="text-ink-400 mt-1">Explore other works from this author</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            @foreach($booksByAuthor as $authorBook)
+                <div class="reveal-on-scroll">
+                    <x-book-card :book="$authorBook" />
+                </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
+</div>
+@endsection

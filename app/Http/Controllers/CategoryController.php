@@ -47,8 +47,11 @@ class CategoryController extends Controller
 
         Category::create($validated);
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category created successfully!');
+        $redirect = request()->routeIs('admin.*')
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('categories.index');
+
+        return $redirect->with('success', 'Category created successfully!');
     }
 
     public function show(Request $request, Category $category, BookFilterService $filterService)
@@ -83,15 +86,21 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category updated successfully!');
+        $redirect = request()->routeIs('admin.*')
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('categories.index');
+
+        return $redirect->with('success', 'Category updated successfully!');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category deleted successfully!');
+        $redirect = request()->routeIs('admin.*')
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('categories.index');
+
+        return $redirect->with('success', 'Category deleted successfully!');
     }
 }

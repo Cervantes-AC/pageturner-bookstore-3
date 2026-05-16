@@ -74,6 +74,8 @@
                     <label class="block text-ink-700 text-sm font-semibold mb-2">Sort</label>
                     <select name="sort" class="input-field">
                         <option value="">Newest First</option>
+                        <option value="bestseller" {{ request('sort') == 'bestseller' ? 'selected' : '' }}>Best Sellers</option>
+                        <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Highest Rated</option>
                         <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
                         <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
                         <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Title: A-Z</option>

@@ -169,7 +169,12 @@
             @endif
 
             {{-- 4.0 Data Reference --}}
-            @if($report->data)
+            @php
+                $dataRefs = collect($report->data)->filter(function($v, $k) {
+                    return !str_starts_with($k, '_') && is_array($v);
+                });
+            @endphp
+            @if($dataRefs->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-sm border border-parchment-200 p-6 mb-6">
                     <div class="flex items-center space-x-3 mb-4">
                         <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -178,8 +183,8 @@
                         <h3 class="font-heading text-lg font-semibold text-ink-900">Data Reference</h3>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @foreach($report->data as $key => $value)
-                            @if(is_array($value) && isset($value['total_revenue']))
+                        @foreach($dataRefs as $key => $value)
+                            @if(isset($value['total_revenue']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Sales Performance</p>
                                     <div class="space-y-1">
@@ -188,7 +193,7 @@
                                         <p class="text-sm text-ink-700">Avg Order: <span class="font-semibold">₱{{ number_format($value['average_order_value'] ?? 0, 2) }}</span></p>
                                     </div>
                                 </div>
-                            @elseif(is_array($value) && isset($value['total_books']))
+                            @elseif(isset($value['total_books']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Inventory</p>
                                     <div class="space-y-1">
@@ -197,7 +202,7 @@
                                         <p class="text-sm text-ink-700">Low Stock: <span class="font-semibold {{ ($value['low_stock_count'] ?? 0) > 0 ? 'text-red-600' : '' }}">{{ $value['low_stock_count'] ?? 0 }}</span></p>
                                     </div>
                                 </div>
-                            @elseif(is_array($value) && isset($value['total_users']))
+                            @elseif(isset($value['total_users']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Users</p>
                                     <div class="space-y-1">
@@ -206,7 +211,7 @@
                                         <p class="text-sm text-ink-700">Verified: <span class="font-semibold">{{ $value['verified'] ?? 0 }}</span></p>
                                     </div>
                                 </div>
-                            @elseif(is_array($value) && isset($value['total_reviews']))
+                            @elseif(isset($value['total_reviews']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Reviews</p>
                                     <div class="space-y-1">
@@ -214,12 +219,12 @@
                                         <p class="text-sm text-ink-700">Avg Rating: <span class="font-semibold">{{ number_format($value['average_rating'] ?? 0, 1) }}</span> / 5</p>
                                     </div>
                                 </div>
-                            @elseif(is_array($value) && isset($value['monthly_revenue']))
+                            @elseif(isset($value['monthly_revenue']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Trends</p>
                                     <p class="text-sm text-ink-700">{{ count($value['monthly_revenue']) }} months tracked</p>
                                 </div>
-                            @elseif(is_array($value) && isset($value['status_breakdown']))
+                            @elseif(isset($value['status_breakdown']))
                                 <div class="p-4 bg-parchment-50 rounded-lg border border-parchment-200">
                                     <p class="text-xs font-semibold uppercase tracking-wider text-ink-400 mb-2">Orders</p>
                                     <p class="text-sm text-ink-700">Shipped: <span class="font-semibold">{{ $value['total_shipped'] ?? 0 }}</span></p>
